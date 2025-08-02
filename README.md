@@ -2,9 +2,9 @@
 
 A community-driven survival game. The project's goal is to build a playable game through open-source contributions.
 
-## Project Overview
+## A Note from the Original Author
 
-This project is an experiment in collaborative game development, inspired by titles like Vampire Survivors, Brotato, and COD Zombies. It features a complete, playable core loop with dynamic difficulty scaling.
+> "You don't have to chip in, but my goal is to make a silly game with inspiration from COD Zombies, Nova Drift, Vampire Survivors, brotato, and Bounty of One. It's nothing serious, but I have spent about 3 hours, and a lot of that time asking ChatGPT for help. I'm gonna get back to working on it tomorrow, so even if you add something small like funny faces on the enemy capsules, I il put it in. (*^3^)/~☆"
 
 ## Current State: A Detailed Look
 
@@ -45,7 +45,7 @@ The project is ready for expansion. The existing systems provide a solid base fo
     * **Code Refactoring:** The `EnemyAI.cs` script has redundant health/damage variables that could be removed to avoid confusion with `EnemyHealth.cs` and `EnemyDamage.cs`. Similarly, `MoneyPickup.cs` appears to be an unused duplicate of `Money.cs`.
 
 * **Go Insane:**
-    * This is an open invitation to add something wild. If you have a chaotic, hilarious, or completely unpredictable idea, this is the place for it.
+    * This is an open invitation to add something wild. If you have a chaotic, hilarious, or completely unpredictable idea, this is the place for it. Examples: make enemies explode into confetti, give the player a temporary "disco mode" that makes everyone dance, or add a power-up that turns all bullets into chickens. The goal here is fun over balance.
 
 ## Getting Started
 
