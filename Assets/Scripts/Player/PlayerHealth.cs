@@ -24,14 +24,13 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+
     void Die()
     {
-        Debug.Log("Player died!");
-        if (deathMessage != null)
+        Debug.Log("Player died");
+        if (GameManager.Instance != null)
         {
-            deathMessage.SetActive(true);
+            GameManager.Instance.RespawnPlayer();
         }
-
-        Time.timeScale = 0f; // stop the game
     }
 }
