@@ -11,6 +11,10 @@ public class PauseManager : MonoBehaviour
     [SerializeField]
     private GameObject pauseMenuPanel;
 
+    [SerializeField] private GameObject settingsPanelPrefab;
+    [SerializeField] private GameObject canvas;
+    private GameObject _activeSettingsInstance;
+
     // Tracks the current paused state of the game.
     private bool isPaused = false;
 
@@ -80,5 +84,15 @@ public class PauseManager : MonoBehaviour
         Cursor.visible = true;
 
         GameSceneManager.Instance.LoadMainMenu();
+    }
+
+    public void OnSettingsButtonPressed()
+    {
+        Debug.Log(_activeSettingsInstance == null ? "Instantiate new SettingsPanel" : "Open active SettingsPanel");
+        // Only create a new settings panel if one isn't already active.
+        if (_activeSettingsInstance == null)
+        {
+            _activeSettingsInstance = Instantiate(settingsPanelPrefab, canvas.transform);
+        }
     }
 }

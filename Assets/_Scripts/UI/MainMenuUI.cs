@@ -10,6 +10,9 @@ public class MainMenuUI : MonoBehaviour
     // Using a constant prevents typos when calling the SceneManager.
     private const string FIRST_LEVEL_SCENE_NAME = "Level_1";
 
+    [SerializeField] private GameObject settingsPanelPrefab;
+    private GameObject _activeSettingsInstance;
+
     /// <summary>
     /// Called when the "Start" button is clicked.
     /// Loads the first playable level.
@@ -37,5 +40,14 @@ public class MainMenuUI : MonoBehaviour
     {
         Debug.Log("Quit Button Pressed.");
         GameSceneManager.Instance.QuitGame();
+    }
+
+    public void OnSettingsButtonPressed()
+    {
+        // Only create a new settings panel if one isn't already active.
+        if (_activeSettingsInstance == null)
+        {
+            _activeSettingsInstance = Instantiate(settingsPanelPrefab, transform.parent);
+        }
     }
 }
