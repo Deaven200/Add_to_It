@@ -1,0 +1,41 @@
+using UnityEngine;
+
+/// <summary>
+/// Handles the UI logic for the Main Menu screen.
+/// This script should be attached to the Canvas of the MainMenu scene.
+/// </summary>
+public class MainMenuUI : MonoBehaviour
+{
+    // A constant holding the name of the first level scene.
+    // Using a constant prevents typos when calling the SceneManager.
+    private const string FIRST_LEVEL_SCENE_NAME = "Level_1";
+
+    /// <summary>
+    /// Called when the "Start" button is clicked.
+    /// Loads the first playable level.
+    /// </summary>
+    public void OnStartButtonPressed()
+    {
+        // We access the Singleton instance of our GameSceneManager
+        // and call its public method to load the level.
+        Debug.Log("Start Button Pressed. Loading level...");
+        GameSceneManager.Instance.LoadLevel(FIRST_LEVEL_SCENE_NAME);
+    }
+
+    /// <summary>
+    /// Called when the "Level Select" button is clicked.
+    /// </summary>
+    public void OnLevelSelectButtonPressed()
+    {
+        GameSceneManager.Instance.LoadLevel("LevelSelect");
+    }
+
+    /// <summary>
+    /// Called when the "Quit" button is clicked.
+    /// </summary>
+    public void OnQuitButtonPressed()
+    {
+        Debug.Log("Quit Button Pressed.");
+        GameSceneManager.Instance.QuitGame();
+    }
+}

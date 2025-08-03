@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,7 +7,7 @@ public class PlayerHealth : MonoBehaviour
     public int maxHealth = 1;
     public int currentHealth;
 
-    public GameObject deathMessage; // assign in inspector
+    [SerializeField] private DeathScreenUI deathScreenUI;
 
     void Start()
     {
@@ -27,10 +28,9 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("Player died");
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.RespawnPlayer();
-        }
+        deathScreenUI.ShowDeathScreen();
+
+        // Make sure to disable player controls or destroy the player object to prevent moving while dead.
+        GetComponent<PlayerMovement>().enabled = false;
     }
 }
