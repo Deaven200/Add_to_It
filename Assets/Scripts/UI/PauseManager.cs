@@ -42,6 +42,10 @@ public class PauseManager : MonoBehaviour
         Time.timeScale = 0f;
         // Activate the pause menu UI.
         pauseMenuPanel.SetActive(true);
+
+        // Unlock the cursor and make it visible so we can click buttons.
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     /// <summary>
@@ -55,6 +59,10 @@ public class PauseManager : MonoBehaviour
         Time.timeScale = 1f;
         // Deactivate the pause menu UI.
         pauseMenuPanel.SetActive(false);
+
+        // Re-lock the cursor and hide it for FPS controls.
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     /// <summary>
@@ -66,6 +74,11 @@ public class PauseManager : MonoBehaviour
         // We must un-pause the game before leaving the scene to ensure
         // the time scale is normal when we come back.
         Time.timeScale = 1f;
+
+        // Ensure the cursor is unlocked and visible before going to the main menu.
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         GameSceneManager.Instance.LoadMainMenu();
     }
 }
