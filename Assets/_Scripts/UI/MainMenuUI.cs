@@ -8,7 +8,7 @@ public class MainMenuUI : MonoBehaviour
 {
     // A constant holding the name of the first level scene.
     // Using a constant prevents typos when calling the SceneManager.
-    private const string FIRST_LEVEL_SCENE_NAME = "Level_1";
+    private const string FIRST_LEVEL_SCENE_NAME = "PlayerRoom";
 
     [SerializeField] private GameObject settingsPanelPrefab;
     private GameObject _activeSettingsInstance;

@@ -9,6 +9,12 @@ EditorBuildSettings:
     path: Assets/_Scenes/Menus/MainMenu.unity
     guid: b6e6583b6b4a8df418b51c65e1872b99
   - enabled: 1
+    path: Assets/_Scenes/Scenes/PlayerRoom.unity
+    guid: 2d8478933c39abc4db3fdf6cd44614b7
+  - enabled: 1
+    path: Assets/_Scenes/Scenes/HubScene.unity
+    guid: 66f0ba1e921224949aeffef075c73303
+  - enabled: 1
     path: Assets/_Scenes/Scenes/Level_1.unity
     guid: 8d3a60ec4ae8b2a4c9d5e9aaf4f963d2
   - enabled: 1
