@@ -39,4 +39,15 @@ public class DeathScreenUI : MonoBehaviour
         Time.timeScale = 1f;
         GameSceneManager.Instance.LoadMainMenu();
     }
+
+    /// <summary>
+    /// Called when the "Go to Player Room" button is clicked.
+    /// </summary>
+    public void OnGoToPlayerRoomPressed()
+    {
+        // Un-pause the game before changing scenes
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("PlayerRoom"); // Replace with exact scene name if different
+    }
+
 }
