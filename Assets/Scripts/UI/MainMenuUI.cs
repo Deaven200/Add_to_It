@@ -8,7 +8,7 @@ public class MainMenuUI : MonoBehaviour
 {
     // A constant holding the name of the first level scene.
     // Using a constant prevents typos when calling the SceneManager.
-    private const string FIRST_LEVEL_SCENE_NAME = "Level_01";
+    private const string FIRST_LEVEL_SCENE_NAME = "Level_1";
 
     /// <summary>
     /// Called when the "Start" button is clicked.
@@ -24,12 +24,10 @@ public class MainMenuUI : MonoBehaviour
 
     /// <summary>
     /// Called when the "Level Select" button is clicked.
-    /// (For now, this is a placeholder)
     /// </summary>
     public void OnLevelSelectButtonPressed()
     {
-        // We'll implement this later. For now, a log is useful for testing.
-        Debug.Log("Level Select Button Pressed. (Not Implemented)");
+        GameSceneManager.Instance.LoadLevel("LevelSelect");
     }
 
     /// <summary>
