@@ -3,53 +3,22 @@ using UnityEngine;
 
 public class UpgradeSelectionUI : MonoBehaviour
 {
-    public GameObject selectionPanel;           // Assign your panel holding upgrade buttons here
     public List<UpgradeButton> upgradeButtons;  // Assign your UpgradeButton components here
 
-    private void DebugReferences()
-    {
-        if (selectionPanel == null)
-        {
-            Debug.LogError("UpgradeSelectionUI: selectionPanel is NOT assigned!");
-        }
-        else
-        {
-            Debug.Log("UpgradeSelectionUI: selectionPanel assigned correctly.");
-        }
-
-        if (upgradeButtons == null)
-        {
-            Debug.LogError("UpgradeSelectionUI: upgradeButtons list is NULL!");
-        }
-        else if (upgradeButtons.Count == 0)
-        {
-            Debug.LogError("UpgradeSelectionUI: upgradeButtons list is EMPTY!");
-        }
-        else
-        {
-            Debug.Log($"UpgradeSelectionUI: upgradeButtons list has {upgradeButtons.Count} elements.");
-
-            for (int i = 0; i < upgradeButtons.Count; i++)
-            {
-                if (upgradeButtons[i] == null)
-                    Debug.LogError($"UpgradeSelectionUI: upgradeButtons[{i}] is NULL!");
-                else
-                    Debug.Log($"UpgradeSelectionUI: upgradeButtons[{i}] assigned to '{upgradeButtons[i].gameObject.name}'.");
-            }
-        }
-    }
-
+    [SerializeField] private GameObject upgradePanelPrefab;
+    [SerializeField] private GameObject canvas;
+    private GameObject _activeUpgradeInstance;
+    private bool isPaused = false;
     public void ShowUpgradeChoices(List<UpgradeData> availableUpgrades)
     {
-        DebugReferences();
 
-        if (upgradeButtons == null || upgradeButtons.Count == 0 || selectionPanel == null)
+        if (upgradeButtons == null || upgradeButtons.Count == 0 || _activeUpgradeInstance == null)
         {
             Debug.LogError("UpgradeSelectionUI is not set up correctly!");
             return;
         }
 
-        selectionPanel.SetActive(true);
+        _activeUpgradeInstance.SetActive(true);
 
         // Display upgrade info on buttons (just an example)
         for (int i = 0; i < upgradeButtons.Count; i++)
@@ -70,6 +39,50 @@ public class UpgradeSelectionUI : MonoBehaviour
     {
         Debug.Log($"Upgrade selected: {upgrade.upgradeName}");
         // Handle upgrade selection logic here
-        selectionPanel.SetActive(false);
+        ResumeGame();
+    }
+
+
+    /// <summary>
+    /// Pauses the game, shows the menu, and stops time.
+    /// </summary>
+    public void PauseGame()
+    {
+        isPaused = true;
+        // Set the game's time scale to 0, which freezes all physics-based movement and animations.
+        Time.timeScale = 0f;
+        // Activate the pause menu UI.
+        _activeUpgradeInstance.SetActive(true);
+
+        // Unlock the cursor and make it visible so we can click buttons.
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    /// <summary>
+    /// Resumes the game, hides the menu, and restores time.
+    /// This is public so our "Continue" button can call it.
+    /// </summary>
+    public void ResumeGame()
+    {
+        isPaused = false;
+        // Set the time scale back to 1 to resume normal game speed.
+        Time.timeScale = 1f;
+        // Deactivate the pause menu UI.
+        _activeUpgradeInstance.SetActive(false);
+
+        // Re-lock the cursor and hide it for FPS controls.
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    public void OnUpgradeButtonPressed()
+    {
+        Debug.Log(_activeUpgradeInstance == null ? "Instantiate new UpgradePanel" : "Open active UpgradePanel");
+        // Only create a new settings panel if one isn't already active.
+        if (_activeUpgradeInstance == null)
+        {
+            _activeUpgradeInstance = Instantiate(upgradePanelPrefab, canvas.transform);
+        }
     }
 }

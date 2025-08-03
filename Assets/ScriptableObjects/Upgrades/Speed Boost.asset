@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 077fa10c1ff00b046b4077eac514e6d5, type: 3}
   m_Name: Speed Boost
   m_EditorClassIdentifier: 
-  upgradeName: 
-  description: 
+  upgradeName: Speed Boost
+  description: Increases move speed by 10%
   icon: {fileID: 0}
-  upgradeType: 0
-  value: 0
+  upgradeType: 1
+  value: 0.1
