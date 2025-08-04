@@ -24,12 +24,18 @@ public class CameraController : MonoBehaviour
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
         // Rotate player left/right (yaw)
-        player.Rotate(Vector3.up * mouseX);
+        if (player != null)
+        {
+            player.Rotate(Vector3.up * mouseX);
+        }
 
         // Rotate camera pivot up/down (pitch)
         pitch -= mouseY;
         pitch = Mathf.Clamp(pitch, -60f, 85f);
-        cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        if (cameraPivot != null)
+        {
+            cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        }
 
         // Toggle view mode
         if (Input.GetKeyDown(KeyCode.V))
@@ -38,12 +44,11 @@ public class CameraController : MonoBehaviour
         }
 
         // Move camera to correct offset for first/third person
-        mainCamera.localPosition = isFirstPerson ? firstPersonOffset : thirdPersonOffset;
+        if (mainCamera != null)
+        {
+            mainCamera.localPosition = isFirstPerson ? firstPersonOffset : thirdPersonOffset;
+        }
     }
 
-    void LateUpdate()
-    {
-        // Make the whole rig follow the player's position
-        transform.position = player.position;
-    }
+    // Remove the LateUpdate method entirely for now
 }

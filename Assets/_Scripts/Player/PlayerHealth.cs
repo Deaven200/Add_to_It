@@ -25,7 +25,6 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-
     void Die()
     {
         deathScreenUI.ShowDeathScreen();
