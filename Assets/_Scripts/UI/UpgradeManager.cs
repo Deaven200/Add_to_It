@@ -3,35 +3,26 @@ using UnityEngine;
 
 public class UpgradeSelectionUI : MonoBehaviour
 {
-    public List<UpgradeButton> upgradeButtons;  // Assign your UpgradeButton components here
+    public List<UpgradeData> possibleUpgrades;
 
     [SerializeField] private GameObject upgradePanelPrefab;
+    [SerializeField] private GameObject upgradeCardPrefab;
     [SerializeField] private GameObject canvas;
+    
     private GameObject _activeUpgradeInstance;
-    private bool isPaused = false;
-    public void ShowUpgradeChoices(List<UpgradeData> availableUpgrades)
+    private GameObject _buttonContainerInstance;
+
+
+    public bool isPaused = false;
+    public void ShowUpgradeChoices()
     {
-
-        if (upgradeButtons == null || upgradeButtons.Count == 0 || _activeUpgradeInstance == null)
-        {
-            Debug.LogError("UpgradeSelectionUI is not set up correctly!");
-            return;
-        }
-
         _activeUpgradeInstance.SetActive(true);
 
-        // Display upgrade info on buttons (just an example)
-        for (int i = 0; i < upgradeButtons.Count; i++)
+        // Create a button for each level
+        foreach(UpgradeData upgradeData in possibleUpgrades)
         {
-            if (i < availableUpgrades.Count)
-            {
-                upgradeButtons[i].gameObject.SetActive(true);
-                upgradeButtons[i].SetUpgradeData(availableUpgrades[i], OnUpgradeSelected);
-            }
-            else
-            {
-                upgradeButtons[i].gameObject.SetActive(false);
-            }
+            GameObject cardGO = Instantiate(upgradeCardPrefab, _buttonContainerInstance.transform);
+            cardGO.GetComponent<UpgradeCard>().SetUpgradeData(upgradeData);
         }
     }
 
@@ -41,7 +32,6 @@ public class UpgradeSelectionUI : MonoBehaviour
         // Handle upgrade selection logic here
         ResumeGame();
     }
-
 
     /// <summary>
     /// Pauses the game, shows the menu, and stops time.
@@ -83,6 +73,8 @@ public class UpgradeSelectionUI : MonoBehaviour
         if (_activeUpgradeInstance == null)
         {
             _activeUpgradeInstance = Instantiate(upgradePanelPrefab, canvas.transform);
+            _buttonContainerInstance = _activeUpgradeInstance.transform.Find("UpgradeButtonContainer").gameObject;
+            ShowUpgradeChoices();
         }
     }
 }
