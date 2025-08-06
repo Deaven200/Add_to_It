@@ -1551,7 +1551,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b2bc165880acea44b5ec5a7336f6ef8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pauseMenuPanel: {fileID: 0}
+  pauseMenuPanel: {fileID: 2128733304}
   deathScreenPanel: {fileID: 36020675}
   settingsPanelPrefab: {fileID: 0}
   canvas: {fileID: 0}
@@ -3238,7 +3238,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 100/100
+  m_text: Health text
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3707,14 +3707,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1646300827693031431, guid: f99a6c306c7623b41905b91bc13b2c95, type: 3}
-      propertyPath: maxHealth
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 1646300827693031431, guid: f99a6c306c7623b41905b91bc13b2c95, type: 3}
-      propertyPath: currentHealth
-      value: 100
-      objectReference: {fileID: 0}
     - target: {fileID: 2354309205396886811, guid: f99a6c306c7623b41905b91bc13b2c95, type: 3}
       propertyPath: m_LocalPosition.x
       value: -4.453477
