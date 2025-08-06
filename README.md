@@ -16,6 +16,7 @@ The project is built in a single scene with a robust set of interconnected syste
     * **Health:** The player has a health system managed by `PlayerHealth.cs`. When health reaches zero, a death message is displayed and the game pauses, creating a loss condition.
     * **Currency:** A `PlayerMoney.cs` script on the player tracks the amount of money collected.
     * **Camera:** A sophisticated camera rig (`CameraController.cs`) follows the player, handles mouse-look aiming, and allows toggling between first-person and third-person views with the 'V' key.
+    *  Press E to interact
 
 * **Enemies**
     * **AI & Movement:** Enemies use a NavMeshAgent to seek the player (`EnemyAI.cs`).
