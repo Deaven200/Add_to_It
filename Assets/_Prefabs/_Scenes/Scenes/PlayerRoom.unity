@@ -638,6 +638,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: WeaponHolder
       objectReference: {fileID: 0}
+    - target: {fileID: 1646300827693031431, guid: f99a6c306c7623b41905b91bc13b2c95, type: 3}
+      propertyPath: maxHealth
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 2354309205396886811, guid: f99a6c306c7623b41905b91bc13b2c95, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.35247502
