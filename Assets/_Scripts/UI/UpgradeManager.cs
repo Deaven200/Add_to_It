@@ -11,9 +11,10 @@ public class UpgradeSelectionUI : MonoBehaviour
     
     private GameObject _activeUpgradeInstance;
     private GameObject _buttonContainerInstance;
-
+    private UpgradeChest _currentChest; // Reference to the chest that opened this menu
 
     public bool isPaused = false;
+    
     public void ShowUpgradeChoices()
     {
         _activeUpgradeInstance.SetActive(true);
@@ -26,11 +27,69 @@ public class UpgradeSelectionUI : MonoBehaviour
         }
     }
 
-    private void OnUpgradeSelected(UpgradeData upgrade)
+    public void SelectUpgrade(UpgradeData upgrade)
     {
         Debug.Log($"Upgrade selected: {upgrade.upgradeName}");
-        // Handle upgrade selection logic here
+        
+        // Apply the upgrade based on its type
+        ApplyUpgrade(upgrade);
+        
+        // Close the menu and remove the chest
         ResumeGame();
+        
+        // Remove the chest that opened this menu
+        if (_currentChest != null)
+        {
+            Destroy(_currentChest.gameObject);
+            _currentChest = null;
+        }
+    }
+    
+    private void ApplyUpgrade(UpgradeData upgrade)
+    {
+        // Find the player to apply upgrades to
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null)
+        {
+            Debug.LogError("Player not found! Cannot apply upgrade.");
+            return;
+        }
+        
+        switch (upgrade.upgradeType)
+        {
+            case UpgradeData.UpgradeType.Health:
+                PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+                if (playerHealth != null)
+                {
+                    playerHealth.SetMaxHealth(playerHealth.maxHealth + (int)upgrade.value);
+                    playerHealth.Heal((int)upgrade.value);
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.Damage:
+                // Apply damage upgrade to player shooting
+                PlayerShooting playerShooting = player.GetComponent<PlayerShooting>();
+                if (playerShooting != null)
+                {
+                    // You'll need to add a damage field to PlayerShooting
+                    Debug.Log($"Applied damage upgrade: +{upgrade.value}");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.MoveSpeed:
+                // Apply speed upgrade to player movement
+                PlayerMovement playerMovement = player.GetComponent<PlayerMovement>();
+                if (playerMovement != null)
+                {
+                    // You'll need to add a speed field to PlayerMovement
+                    Debug.Log($"Applied speed upgrade: +{upgrade.value}");
+                }
+                break;
+                
+            default:
+                Debug.Log($"Upgrade type {upgrade.upgradeType} not implemented yet.");
+                break;
+        }
     }
 
     /// <summary>
@@ -66,9 +125,13 @@ public class UpgradeSelectionUI : MonoBehaviour
         Cursor.visible = false;
     }
 
-    public void OnUpgradeButtonPressed()
+    public void OnUpgradeButtonPressed(UpgradeChest chest = null)
     {
         Debug.Log(_activeUpgradeInstance == null ? "Instantiate new UpgradePanel" : "Open active UpgradePanel");
+        
+        // Store reference to the chest that opened this menu
+        _currentChest = chest;
+        
         // Only create a new settings panel if one isn't already active.
         if (_activeUpgradeInstance == null)
         {
