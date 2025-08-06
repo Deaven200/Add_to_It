@@ -142,12 +142,11 @@ public class PersistentPlayer : MonoBehaviour
         }
         
         // Disable camera
-        CameraController camera = GetComponentInChildren<CameraController>();
+        CameraController camera = GetComponent<CameraController>();
         if (camera != null)
         {
             camera.enabled = false;
         }
-        
     }
     
     private void EnablePlayerControls()
@@ -167,15 +166,11 @@ public class PersistentPlayer : MonoBehaviour
         }
         
         // Enable camera
-        CameraController camera = GetComponentInChildren<CameraController>();
+        CameraController camera = GetComponent<CameraController>();
         if (camera != null)
         {
             camera.enabled = true;
         }
-
-        // Reset cursor state (mouse look won't work without this!)
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
     
     // Public method to force respawn (for testing or special cases)

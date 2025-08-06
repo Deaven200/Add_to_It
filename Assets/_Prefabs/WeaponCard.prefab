@@ -574,7 +574,7 @@ MonoBehaviour:
   weaponNameText: {fileID: 8123911240032551842}
   weaponDescriptionText: {fileID: 3170500137134327393}
   weaponStatsText: {fileID: 212110278870308194}
-  selectButton: {fileID: 0}
+  selectButton: {fileID: 5710446815054669576}
   backgroundImage: {fileID: 0}
   selectedColor: {r: 0, g: 1, b: 0, a: 1}
   normalColor: {r: 1, g: 1, b: 1, a: 1}

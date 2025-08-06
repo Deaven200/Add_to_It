@@ -21,10 +21,13 @@ public class WeaponCard : MonoBehaviour
     
     void Start()
     {
+        Debug.Log($"WeaponCard: Start called for {gameObject.name}");
+        
         // Set up button click event
         if (selectButton != null)
         {
             selectButton.onClick.AddListener(OnWeaponSelected);
+            Debug.Log($"WeaponCard: Button assigned in inspector for {gameObject.name}");
         }
         else
         {
@@ -33,12 +36,19 @@ public class WeaponCard : MonoBehaviour
             if (selectButton != null)
             {
                 selectButton.onClick.AddListener(OnWeaponSelected);
+                Debug.Log($"WeaponCard: Found Button component automatically for {gameObject.name}");
+            }
+            else
+            {
+                Debug.LogError($"WeaponCard: No Button component found on {gameObject.name}! Make sure the weapon card prefab has a Button component.");
             }
         }
     }
     
     public void SetWeaponData(WeaponData data, WeaponManager manager)
     {
+        Debug.Log($"WeaponCard: SetWeaponData called for {gameObject.name}. Data null? {(data == null ? "YES" : "NO")}, Manager null? {(manager == null ? "YES" : "NO")}");
+        
         weaponData = data;
         weaponManager = manager;
         
@@ -47,7 +57,13 @@ public class WeaponCard : MonoBehaviour
     
     void UpdateUI()
     {
-        if (weaponData == null) return;
+        if (weaponData == null) 
+        {
+            Debug.LogError($"WeaponCard: weaponData is null for {gameObject.name}");
+            return;
+        }
+        
+        Debug.Log($"WeaponCard: Updating UI for weapon: {weaponData.weaponName}");
         
         // Set weapon icon
         if (weaponIcon != null && weaponData.weaponIcon != null)
@@ -65,11 +81,19 @@ public class WeaponCard : MonoBehaviour
         {
             weaponNameText.text = weaponData.weaponName;
         }
+        else
+        {
+            Debug.LogWarning($"WeaponCard: weaponNameText is null for {gameObject.name}");
+        }
         
         // Set weapon description
         if (weaponDescriptionText != null)
         {
             weaponDescriptionText.text = weaponData.description;
+        }
+        else
+        {
+            Debug.LogWarning($"WeaponCard: weaponDescriptionText is null for {gameObject.name}");
         }
         
         // Set weapon stats
@@ -101,6 +125,10 @@ public class WeaponCard : MonoBehaviour
             
             weaponStatsText.text = stats;
         }
+        else
+        {
+            Debug.LogWarning($"WeaponCard: weaponStatsText is null for {gameObject.name}");
+        }
         
         // Update selection visual
         UpdateSelectionVisual();
@@ -116,12 +144,27 @@ public class WeaponCard : MonoBehaviour
     
     void OnWeaponSelected()
     {
+        Debug.Log($"WeaponCard: OnWeaponSelected called for {gameObject.name}. weaponData null? {(weaponData == null ? "YES" : "NO")}, weaponManager null? {(weaponManager == null ? "YES" : "NO")}");
+        
         if (weaponData != null && weaponManager != null)
         {
+            Debug.Log($"WeaponCard: Equipping weapon: {weaponData.weaponName}");
             weaponManager.EquipWeapon(weaponData);
             weaponManager.HideWeaponSelection();
             
-            Debug.Log($"Selected weapon: {weaponData.weaponName}");
+            Debug.Log($"WeaponCard: Successfully selected weapon: {weaponData.weaponName}");
         }
+        else
+        {
+            Debug.LogError($"WeaponCard: Cannot select weapon - weaponData or weaponManager is null for {gameObject.name}");
+        }
+    }
+    
+    // Debug method to test button functionality
+    [ContextMenu("Test Button Click")]
+    public void TestButtonClick()
+    {
+        Debug.Log($"WeaponCard: Testing button click for {gameObject.name}");
+        OnWeaponSelected();
     }
 } 
