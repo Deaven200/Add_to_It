@@ -11,12 +11,6 @@ public class RandomUpgradeGenerator : MonoBehaviour
         public float weight = 10f;
     }
 
-    [Header("Rarity Settings")]
-    [SerializeField] private List<RarityWeights> rarityWeights = new List<RarityWeights>();
-    
-    [Header("Upgrade Type Settings")]
-    [SerializeField] private List<UpgradeTypeConfig> upgradeTypeConfigs = new List<UpgradeTypeConfig>();
-
     [System.Serializable]
     public class UpgradeTypeConfig
     {
@@ -28,23 +22,24 @@ public class RandomUpgradeGenerator : MonoBehaviour
         public bool isPercentage = false;
     }
 
+    [Header("Rarity Settings")]
+    [SerializeField] private List<RarityWeights> rarityWeights = new List<RarityWeights>();
+    
+    [Header("Upgrade Type Settings")]
+    [SerializeField] private List<UpgradeTypeConfig> upgradeTypeConfigs = new List<UpgradeTypeConfig>();
+
+    private System.Random systemRandom;
+    private static int generationCounter = 0;
+
     private void Awake()
     {
-        Debug.Log("RandomUpgradeGenerator: Awake called");
-        
-        // Force random seed to be different each time
-        Random.InitState(System.DateTime.Now.Millisecond + System.Environment.TickCount);
-        
-        // Initialize the lists
-        InitializeDefaultRarityWeights();
-        InitializeDefaultUpgradeTypeConfigs();
-        
-        // Verify initialization
-        Debug.Log($"RandomUpgradeGenerator: Initialized with {upgradeTypeConfigs.Count} upgrade types and {rarityWeights.Count} rarity weights");
+        InitializeDefaults();
+        CreateFreshRandomGenerator();
     }
 
-    private void InitializeDefaultRarityWeights()
+    private void InitializeDefaults()
     {
+        // Initialize rarity weights if empty
         if (rarityWeights.Count == 0)
         {
             rarityWeights = new List<RarityWeights>
@@ -60,253 +55,50 @@ public class RandomUpgradeGenerator : MonoBehaviour
                 new RarityWeights { rarity = UpgradeData.Rarity.Exotic, weight = 0.5f }
             };
         }
-    }
 
-    private void InitializeDefaultUpgradeTypeConfigs()
-    {
-        Debug.Log("RandomUpgradeGenerator: Initializing default upgrade type configs");
-        
-        if (upgradeTypeConfigs == null)
-        {
-            upgradeTypeConfigs = new List<UpgradeTypeConfig>();
-        }
-        
+        // Initialize upgrade type configs if empty
         if (upgradeTypeConfigs.Count == 0)
         {
             upgradeTypeConfigs = new List<UpgradeTypeConfig>
             {
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.Damage, 
-                    baseName = "Damage Boost",
-                    descriptionTemplate = "Increases weapon damage by {0}",
-                    minValue = 1f,
-                    maxValue = 9f
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.Health, 
-                    baseName = "Health Boost",
-                    descriptionTemplate = "Increases maximum health by {0}",
-                    minValue = 5f,
-                    maxValue = 45f
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.FireRate, 
-                    baseName = "Fire Rate",
-                    descriptionTemplate = "Increases fire rate by {0}%",
-                    minValue = 5f,
-                    maxValue = 45f,
-                    isPercentage = true
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.MoveSpeed, 
-                    baseName = "Speed Boost",
-                    descriptionTemplate = "Increases movement speed by {0}%",
-                    minValue = 5f,
-                    maxValue = 45f,
-                    isPercentage = true
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.DamageResistance, 
-                    baseName = "Armor",
-                    descriptionTemplate = "Reduces damage taken by {0}%",
-                    minValue = 5f,
-                    maxValue = 45f,
-                    isPercentage = true
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.LifeOnKill, 
-                    baseName = "Life Steal",
-                    descriptionTemplate = "Heals {0} health on kill",
-                    minValue = 1f,
-                    maxValue = 9f
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.CoinMagnetRange, 
-                    baseName = "Coin Magnet",
-                    descriptionTemplate = "Increases coin pickup range by {0}%",
-                    minValue = 10f,
-                    maxValue = 90f,
-                    isPercentage = true
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.Shield, 
-                    baseName = "Shield",
-                    descriptionTemplate = "Grants {0} shield points",
-                    minValue = 10f,
-                    maxValue = 90f
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.ChestDropRate, 
-                    baseName = "Lucky Find",
-                    descriptionTemplate = "Increases chest drop rate by {0}%",
-                    minValue = 5f,
-                    maxValue = 45f,
-                    isPercentage = true
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.ExplosionOnKill, 
-                    baseName = "Explosive Kill",
-                    descriptionTemplate = "Creates explosion on kill with {0} radius",
-                    minValue = 1f,
-                    maxValue = 9f
-                },
-                new UpgradeTypeConfig 
-                { 
-                    upgradeType = UpgradeData.UpgradeType.MoreOptions, 
-                    baseName = "Choice Expansion",
-                    descriptionTemplate = "Increases upgrade choices by {0}",
-                    minValue = 1f,
-                    maxValue = 3f
-                }
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Damage, baseName = "Damage Boost", descriptionTemplate = "Increases weapon damage by {0}", minValue = 1f, maxValue = 9f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Health, baseName = "Health Boost", descriptionTemplate = "Increases maximum health by {0}", minValue = 5f, maxValue = 45f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.FireRate, baseName = "Fire Rate", descriptionTemplate = "Increases fire rate by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoveSpeed, baseName = "Speed Boost", descriptionTemplate = "Increases movement speed by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.DamageResistance, baseName = "Armor", descriptionTemplate = "Reduces damage taken by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.LifeOnKill, baseName = "Life Steal", descriptionTemplate = "Heals {0} health on kill", minValue = 1f, maxValue = 9f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.CoinMagnetRange, baseName = "Coin Magnet", descriptionTemplate = "Increases coin pickup range by {0}%", minValue = 10f, maxValue = 90f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Shield, baseName = "Shield", descriptionTemplate = "Grants {0} shield points", minValue = 10f, maxValue = 90f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ChestDropRate, baseName = "Lucky Find", descriptionTemplate = "Increases chest drop rate by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ExplosionOnKill, baseName = "Explosive Kill", descriptionTemplate = "Creates explosion on kill with {0} radius", minValue = 1f, maxValue = 9f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoreOptions, baseName = "Choice Expansion", descriptionTemplate = "Increases upgrade choices by {0}", minValue = 1f, maxValue = 3f }
             };
-            
-            Debug.Log($"RandomUpgradeGenerator: Added {upgradeTypeConfigs.Count} upgrade type configs");
-        }
-        else
-        {
-            Debug.Log($"RandomUpgradeGenerator: Already has {upgradeTypeConfigs.Count} upgrade type configs");
         }
     }
 
-    public UpgradeData GenerateRandomUpgrade()
+    public void CreateFreshRandomGenerator()
     {
-        // Check if upgradeTypeConfigs is initialized
-        if (upgradeTypeConfigs == null || upgradeTypeConfigs.Count == 0)
-        {
-            Debug.LogError("UpgradeTypeConfigs is empty! Initializing defaults...");
-            InitializeDefaultUpgradeTypeConfigs();
-            
-            // Check again after initialization
-            if (upgradeTypeConfigs == null || upgradeTypeConfigs.Count == 0)
-            {
-                Debug.LogError("Failed to initialize upgradeTypeConfigs!");
-                return CreateDefaultUpgrade();
-            }
-        }
+        // Create a completely fresh random generator with multiple entropy sources
+        generationCounter++;
+        long currentTicks = System.DateTime.Now.Ticks;
+        int seed = (int)(currentTicks % int.MaxValue) + 
+                   System.Environment.TickCount + 
+                   Time.frameCount + 
+                   generationCounter * 1000;
         
-        // Create a new UpgradeData instance
-        UpgradeData upgrade = ScriptableObject.CreateInstance<UpgradeData>();
-        
-        // Select random rarity
-        UpgradeData.Rarity selectedRarity = SelectRandomRarity();
-        upgrade.rarity = selectedRarity;
-        
-        // Ensure we have a valid random instance
-        if (systemRandom == null)
-        {
-            SetRandomSeedFromTime();
-        }
-        
-        // Select random upgrade type (with safety check)
-        int randomIndex = systemRandom.Next(0, upgradeTypeConfigs.Count);
-        UpgradeTypeConfig selectedConfig = upgradeTypeConfigs[randomIndex];
-        upgrade.upgradeType = selectedConfig.upgradeType;
-        
-        // Calculate value based on rarity
-        float rarityMultiplier = GetRarityMultiplier(selectedRarity);
-        float baseValue = (float)(systemRandom.NextDouble() * (selectedConfig.maxValue - selectedConfig.minValue) + selectedConfig.minValue);
-        upgrade.value = Mathf.Round(baseValue * rarityMultiplier);
-        
-        // Generate unique name and description
-        upgrade.upgradeName = GenerateUpgradeName(selectedConfig.baseName, selectedRarity);
-        upgrade.description = GenerateUpgradeDescription(selectedConfig, upgrade.value);
-        
-        return upgrade;
-    }
-
-    public List<UpgradeData> GenerateMultipleUpgrades(int count)
-    {
-        List<UpgradeData> upgrades = new List<UpgradeData>();
-        
-        // Ensure we don't generate more upgrades than we have types
-        int maxUniqueUpgrades = Mathf.Min(count, upgradeTypeConfigs.Count);
-        
-        if (count <= maxUniqueUpgrades)
-        {
-            // Generate random upgrades (may have duplicates)
-            for (int i = 0; i < count; i++)
-            {
-                upgrades.Add(GenerateRandomUpgrade());
-            }
-        }
-        else
-        {
-            // If we need more upgrades than types, generate unique ones first, then random
-            List<UpgradeTypeConfig> availableTypes = new List<UpgradeTypeConfig>(upgradeTypeConfigs);
-            
-            // Generate one of each type first
-            for (int i = 0; i < maxUniqueUpgrades; i++)
-            {
-                int randomIndex = Random.Range(0, availableTypes.Count);
-                UpgradeTypeConfig selectedConfig = availableTypes[randomIndex];
-                availableTypes.RemoveAt(randomIndex);
-                
-                UpgradeData upgrade = CreateUpgradeFromConfig(selectedConfig);
-                upgrades.Add(upgrade);
-            }
-            
-            // Fill remaining slots with random upgrades
-            for (int i = maxUniqueUpgrades; i < count; i++)
-            {
-                upgrades.Add(GenerateRandomUpgrade());
-            }
-        }
-        
-        return upgrades;
-    }
-
-    public List<UpgradeData> GenerateDifferentUpgrades(int count)
-    {
-        List<UpgradeData> upgrades = new List<UpgradeData>();
-        List<UpgradeTypeConfig> availableTypes = new List<UpgradeTypeConfig>(upgradeTypeConfigs);
-        
-        // Force a new random seed for this generation
-        ForceRandomSeed();
-        
-        // Shuffle the available types using Fisher-Yates algorithm
-        for (int i = availableTypes.Count - 1; i > 0; i--)
-        {
-            int randomIndex = Random.Range(0, i + 1);
-            var temp = availableTypes[i];
-            availableTypes[i] = availableTypes[randomIndex];
-            availableTypes[randomIndex] = temp;
-        }
-        
-        // Take the first 'count' types and generate random upgrades for each
-        for (int i = 0; i < Mathf.Min(count, availableTypes.Count); i++)
-        {
-            // Force another random seed for each individual upgrade
-            ForceRandomSeed();
-            UpgradeData upgrade = CreateUpgradeFromConfig(availableTypes[i]);
-            upgrades.Add(upgrade);
-        }
-        
-        return upgrades;
+        systemRandom = new System.Random(seed);
+        Debug.Log($"[CLEAN RANDOM] Created fresh generator with seed: {seed} (generation: {generationCounter})");
     }
 
     public List<UpgradeData> GenerateUniqueUpgrades(int count)
     {
-        float currentTime = Time.realtimeSinceStartup;
-        Debug.Log($"[UPGRADE GEN DEBUG] GenerateUniqueUpgrades called for {count} upgrades at time {currentTime:F3} (last: {lastGenerationTime:F3})");
+        // Always create a fresh generator for each call to ensure randomness
+        CreateFreshRandomGenerator();
         
-        // Force additional randomization before generation
-        SetRandomSeedFromTime();
-        lastGenerationTime = currentTime;
+        Debug.Log($"[CLEAN RANDOM] Generating {count} unique upgrades");
         
         List<UpgradeData> upgrades = new List<UpgradeData>();
-        
-        // Create a list of all possible upgrade types
-        List<UpgradeData.UpgradeType> allTypes = new List<UpgradeData.UpgradeType>
+        List<UpgradeData.UpgradeType> availableTypes = new List<UpgradeData.UpgradeType>
         {
             UpgradeData.UpgradeType.Damage,
             UpgradeData.UpgradeType.Health,
@@ -320,104 +112,57 @@ public class RandomUpgradeGenerator : MonoBehaviour
             UpgradeData.UpgradeType.ExplosionOnKill,
             UpgradeData.UpgradeType.MoreOptions
         };
-        
-        // Ensure we have a valid random instance
-        if (systemRandom == null)
-        {
-            SetRandomSeedFromTime();
-        }
-        
-        // Shuffle the types multiple times for better randomization
-        for (int shuffle = 0; shuffle < systemRandom.Next(2, 5); shuffle++)
-        {
-            for (int i = allTypes.Count - 1; i > 0; i--)
-            {
-                int randomIndex = systemRandom.Next(0, i + 1);
-                var temp = allTypes[i];
-                allTypes[i] = allTypes[randomIndex];
-                allTypes[randomIndex] = temp;
-            }
-        }
-        
-        // Take the first 'count' types and generate random upgrades
-        for (int i = 0; i < Mathf.Min(count, allTypes.Count); i++)
-        {
-            UpgradeData upgrade = GenerateUpgradeOfType(allTypes[i]);
-            upgrades.Add(upgrade);
-            Debug.Log($"[UPGRADE GEN DEBUG] Generated: {upgrade.upgradeName} ({upgrade.rarity}) - {upgrade.upgradeType} - Value: {upgrade.value}");
-        }
-        
-        Debug.Log($"[UPGRADE GEN DEBUG] Returning {upgrades.Count} unique upgrades");
-        return upgrades;
-    }
 
-    private UpgradeData CreateUpgradeFromConfig(UpgradeTypeConfig config)
-    {
-        UpgradeData upgrade = ScriptableObject.CreateInstance<UpgradeData>();
-        
-        // Select random rarity
-        UpgradeData.Rarity selectedRarity = SelectRandomRarity();
-        upgrade.rarity = selectedRarity;
-        upgrade.upgradeType = config.upgradeType;
-        
-        // Ensure we have a valid random instance
-        if (systemRandom == null)
+        // Shuffle the available types
+        for (int i = availableTypes.Count - 1; i > 0; i--)
         {
-            SetRandomSeedFromTime();
+            int randomIndex = systemRandom.Next(0, i + 1);
+            var temp = availableTypes[i];
+            availableTypes[i] = availableTypes[randomIndex];
+            availableTypes[randomIndex] = temp;
         }
-        
-        // Calculate value based on rarity
-        float rarityMultiplier = GetRarityMultiplier(selectedRarity);
-        float baseValue = (float)(systemRandom.NextDouble() * (config.maxValue - config.minValue) + config.minValue);
-        upgrade.value = Mathf.Round(baseValue * rarityMultiplier);
-        
-        // Generate name and description
-        upgrade.upgradeName = GenerateUpgradeName(config.baseName, selectedRarity);
-        upgrade.description = GenerateUpgradeDescription(config, upgrade.value);
-        
-        return upgrade;
+
+        // Generate upgrades for the first 'count' types
+        for (int i = 0; i < Mathf.Min(count, availableTypes.Count); i++)
+        {
+            UpgradeData upgrade = GenerateUpgradeOfType(availableTypes[i]);
+            upgrades.Add(upgrade);
+            Debug.Log($"[CLEAN RANDOM] Generated: {upgrade.upgradeName} ({upgrade.rarity}) - Value: {upgrade.value}");
+        }
+
+        return upgrades;
     }
 
     private UpgradeData GenerateUpgradeOfType(UpgradeData.UpgradeType type)
     {
         UpgradeData upgrade = ScriptableObject.CreateInstance<UpgradeData>();
-        
-        // Select random rarity
-        UpgradeData.Rarity selectedRarity = SelectRandomRarity();
-        upgrade.rarity = selectedRarity;
         upgrade.upgradeType = type;
         
         // Find the config for this type
         UpgradeTypeConfig config = upgradeTypeConfigs.Find(c => c.upgradeType == type);
-        if (config != null)
+        if (config == null)
         {
-            // Ensure we have a valid random instance
-            if (systemRandom == null)
-            {
-                SetRandomSeedFromTime();
-            }
-            
-            // Calculate value based on rarity
-            float rarityMultiplier = GetRarityMultiplier(selectedRarity);
-            float baseValue = (float)(systemRandom.NextDouble() * (config.maxValue - config.minValue) + config.minValue);
-            upgrade.value = Mathf.Round(baseValue * rarityMultiplier);
-            
-            // Generate name and description
-            upgrade.upgradeName = GenerateUpgradeName(config.baseName, selectedRarity);
-            upgrade.description = GenerateUpgradeDescription(config, upgrade.value);
+            Debug.LogError($"No config found for upgrade type: {type}");
+            return CreateFallbackUpgrade();
         }
+
+        // Generate random rarity
+        upgrade.rarity = SelectRandomRarity();
+        
+        // Generate random value within the config range
+        float baseValue = (float)(systemRandom.NextDouble() * (config.maxValue - config.minValue) + config.minValue);
+        float rarityMultiplier = GetRarityMultiplier(upgrade.rarity);
+        upgrade.value = Mathf.Round(baseValue * rarityMultiplier);
+        
+        // Generate name and description
+        upgrade.upgradeName = GenerateUpgradeName(config.baseName, upgrade.rarity);
+        upgrade.description = GenerateUpgradeDescription(config, upgrade.value);
         
         return upgrade;
     }
 
     private UpgradeData.Rarity SelectRandomRarity()
     {
-        // Ensure we have a valid random instance
-        if (systemRandom == null)
-        {
-            SetRandomSeedFromTime();
-        }
-        
         float totalWeight = 0f;
         foreach (var rarityWeight in rarityWeights)
         {
@@ -484,106 +229,26 @@ public class RandomUpgradeGenerator : MonoBehaviour
         string valueText = config.isPercentage ? $"{value}%" : value.ToString();
         return string.Format(config.descriptionTemplate, valueText);
     }
-    
-    // Debug method to test upgrade generation
-    [ContextMenu("Test Upgrade Generation")]
-    public void TestUpgradeGeneration()
-    {
-        Debug.Log("=== Testing Upgrade Generation ===");
-        
-        // Force new random seed
-        ForceRandomSeed();
-        
-        List<UpgradeData> testUpgrades = GenerateMultipleUpgrades(3);
-        
-        for (int i = 0; i < testUpgrades.Count; i++)
-        {
-            UpgradeData upgrade = testUpgrades[i];
-            Debug.Log($"Upgrade {i + 1}: {upgrade.upgradeName} ({upgrade.rarity}) - {upgrade.description} - Value: {upgrade.value}");
-        }
-        
-        // Test multiple generations
-        Debug.Log("=== Testing Multiple Generations ===");
-        for (int gen = 0; gen < 3; gen++)
-        {
-            ForceRandomSeed();
-            List<UpgradeData> genUpgrades = GenerateMultipleUpgrades(2);
-            Debug.Log($"Generation {gen + 1}:");
-            for (int i = 0; i < genUpgrades.Count; i++)
-            {
-                Debug.Log($"  {genUpgrades[i].upgradeName} ({genUpgrades[i].rarity})");
-            }
-        }
-    }
 
-    public void ForceRandomSeed()
-    {
-        int seed = System.DateTime.Now.Millisecond + 
-               System.Environment.TickCount + 
-               Random.Range(0, 10000) + 
-               (int)(Time.realtimeSinceStartup * 1000);
-        Random.InitState(seed);
-    }
-
-    private static int seedCounter = 0; // Static counter to ensure uniqueness
-    private System.Random systemRandom; // Use System.Random for better control
-    private static float lastGenerationTime = 0f; // Track last generation time
-    
-    public void SetRandomSeedFromTime()
-    {
-        // Increment counter for uniqueness
-        seedCounter++;
-        
-        // Use multiple time sources for better entropy + frame count + counter
-        int seed = (int)(System.DateTime.Now.Ticks % int.MaxValue) + 
-                   System.Environment.TickCount + 
-                   (int)(Time.realtimeSinceStartup * 1000f) +
-                   Time.frameCount +
-                   seedCounter * 1000 +
-                   UnityEngine.Random.Range(0, 10000);
-        
-        // Initialize both Unity's Random and our System.Random
-        Random.InitState(seed);
-        systemRandom = new System.Random(seed);
-        
-        // Advance the random state several times to avoid similar sequences
-        for (int i = 0; i < systemRandom.Next(5, 15); i++)
-        {
-            Random.Range(0f, 1f);
-            systemRandom.NextDouble();
-        }
-        
-        Debug.Log($"[RANDOM SEED DEBUG] Set random seed to: {seed} (counter: {seedCounter}) at time: {System.DateTime.Now:HH:mm:ss.fff}");
-    }
-
-    private UpgradeData CreateDefaultUpgrade()
+    private UpgradeData CreateFallbackUpgrade()
     {
         UpgradeData upgrade = ScriptableObject.CreateInstance<UpgradeData>();
         upgrade.rarity = UpgradeData.Rarity.Common;
         upgrade.upgradeType = UpgradeData.UpgradeType.Health;
         upgrade.value = 10f;
-        upgrade.upgradeName = "Default Health Boost";
+        upgrade.upgradeName = "Standard Health Boost";
         upgrade.description = "Increases maximum health by 10";
         return upgrade;
     }
 
-    [ContextMenu("Force Initialize")]
-    public void ForceInitialize()
+    // Test method for debugging
+    [ContextMenu("Test Clean Generation")]
+    public void TestCleanGeneration()
     {
-        Debug.Log("RandomUpgradeGenerator: Force initializing...");
-        InitializeDefaultRarityWeights();
-        InitializeDefaultUpgradeTypeConfigs();
-        Debug.Log($"RandomUpgradeGenerator: Force initialized with {upgradeTypeConfigs.Count} upgrade types");
-    }
-    
-    [ContextMenu("Test Random Generation Quick")]
-    public void TestRandomGenerationQuick()
-    {
-        Debug.Log("=== QUICK RANDOM TEST WITH SYSTEM.RANDOM ===");
+        Debug.Log("=== TESTING CLEAN GENERATION ===");
         
         for (int test = 1; test <= 3; test++)
         {
-            SetRandomSeedFromTime();
             List<UpgradeData> testUpgrades = GenerateUniqueUpgrades(3);
             Debug.Log($"Test {test}:");
             foreach (var upgrade in testUpgrades)
@@ -591,22 +256,8 @@ public class RandomUpgradeGenerator : MonoBehaviour
                 Debug.Log($"  {upgrade.upgradeName} ({upgrade.rarity}) - {upgrade.upgradeType} - Value: {upgrade.value}");
             }
             
-            // Wait a small amount to ensure different timestamps
-            System.Threading.Thread.Sleep(10);
-        }
-    }
-    
-    [ContextMenu("Force New Random Instance")]
-    public void ForceNewRandomInstance()
-    {
-        Debug.Log("=== FORCING NEW RANDOM INSTANCE ===");
-        systemRandom = null;
-        SetRandomSeedFromTime();
-        
-        List<UpgradeData> testUpgrades = GenerateUniqueUpgrades(3);
-        foreach (var upgrade in testUpgrades)
-        {
-            Debug.Log($"New instance: {upgrade.upgradeName} ({upgrade.rarity}) - {upgrade.upgradeType} - Value: {upgrade.value}");
+            // Small delay to ensure different seeds
+            System.Threading.Thread.Sleep(50);
         }
     }
 }

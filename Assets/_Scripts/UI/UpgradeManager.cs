@@ -46,14 +46,17 @@ public class UpgradeManager : MonoBehaviour
         // Calculate how many upgrades to show (base + bonus, capped at max)
         int upgradesToShow = Mathf.Min(baseUpgradesToShow + upgradeOptionsBonus, maxUpgradesToShow);
         
-        // Force random seed before generating upgrades
+        // Generate random upgrades - the new clean generator handles randomness internally
         if (upgradeGenerator != null)
         {
-            upgradeGenerator.SetRandomSeedFromTime();
+            Debug.Log("[UPGRADE MANAGER] Generating new random upgrades for chest opening");
+            _currentUpgrades = upgradeGenerator.GenerateUniqueUpgrades(upgradesToShow);
         }
-        
-        // Generate random upgrades (use regular method instead of different)
-        _currentUpgrades = upgradeGenerator.GenerateUniqueUpgrades(upgradesToShow);
+        else
+        {
+            Debug.LogError("[UPGRADE MANAGER] No upgrade generator found!");
+            _currentUpgrades = new List<UpgradeData>();
+        }
 
         // Clear any existing cards first
         if (_buttonContainerInstance != null)
@@ -65,13 +68,14 @@ public class UpgradeManager : MonoBehaviour
         }
 
         // Create a button for each upgrade
+        Debug.Log($"[CHEST DEBUG] Creating {_currentUpgrades.Count} upgrade cards:");
         foreach(UpgradeData upgradeData in _currentUpgrades)
         {
             GameObject cardGO = Instantiate(upgradeCardPrefab, _buttonContainerInstance.transform);
             cardGO.GetComponent<UpgradeCard>().SetUpgradeData(upgradeData);
             
-            // Debug log each upgrade being created
-            Debug.Log($"Created upgrade card: {upgradeData.upgradeName} ({upgradeData.rarity}) - {upgradeData.description}");
+            // Debug log each upgrade being created with more details
+            Debug.Log($"[CHEST DEBUG] Card: {upgradeData.upgradeName} ({upgradeData.rarity}) - {upgradeData.description} - Value: {upgradeData.value} - Type: {upgradeData.upgradeType}");
         }
         
         // Force layout update to ensure proper positioning
@@ -84,7 +88,7 @@ public class UpgradeManager : MonoBehaviour
 
     public void SelectUpgrade(UpgradeData upgrade)
     {
-        Debug.Log($"Upgrade selected: {upgrade.upgradeName} ({upgrade.rarity})");
+        Debug.Log($"[CHEST DEBUG] Upgrade selected: {upgrade.upgradeName} ({upgrade.rarity})");
         
         // Apply the upgrade based on its type
         ApplyUpgrade(upgrade);
@@ -92,9 +96,19 @@ public class UpgradeManager : MonoBehaviour
         // Close the menu and remove the chest
         ResumeGame();
         
+        // Destroy the upgrade panel to ensure fresh generation next time
+        if (_activeUpgradeInstance != null)
+        {
+            Debug.Log("[CHEST DEBUG] Destroying upgrade panel for fresh generation next time");
+            Destroy(_activeUpgradeInstance);
+            _activeUpgradeInstance = null;
+            _buttonContainerInstance = null;
+        }
+        
         // Remove the chest that opened this menu
         if (_currentChest != null)
         {
+            Debug.Log($"[CHEST DEBUG] Destroying chest with ID: {_currentChest.GetInstanceID()}");
             Destroy(_currentChest.gameObject);
             _currentChest = null;
         }
@@ -250,6 +264,8 @@ public class UpgradeManager : MonoBehaviour
 
     public void OnUpgradeButtonPressed(UpgradeChest chest = null)
     {
+        string chestId = chest != null ? chest.GetInstanceID().ToString() : "null";
+        Debug.Log($"[CHEST DEBUG] OnUpgradeButtonPressed called by chest {chestId}");
         Debug.Log(_activeUpgradeInstance == null ? "Instantiate new UpgradePanel" : "Open active UpgradePanel");
         
         // Store reference to the chest that opened this menu
@@ -258,10 +274,18 @@ public class UpgradeManager : MonoBehaviour
         // Only create a new settings panel if one isn't already active.
         if (_activeUpgradeInstance == null)
         {
+            Debug.Log("[CHEST DEBUG] Creating new upgrade panel instance");
             _activeUpgradeInstance = Instantiate(upgradePanelPrefab, canvas.transform);
             _buttonContainerInstance = _activeUpgradeInstance.transform.Find("UpgradeButtonContainer").gameObject;
-            ShowUpgradeChoices();
         }
+        else
+        {
+            Debug.Log("[CHEST DEBUG] Reusing existing upgrade panel");
+        }
+        
+        // Always show new upgrade choices when any chest is opened
+        Debug.Log("[CHEST DEBUG] About to call ShowUpgradeChoices()");
+        ShowUpgradeChoices();
     }
     
     // Getter for current upgrade options bonus
