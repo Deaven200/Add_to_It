@@ -201,14 +201,20 @@ public class RandomUpgradeGenerator : MonoBehaviour
         UpgradeData.Rarity selectedRarity = SelectRandomRarity();
         upgrade.rarity = selectedRarity;
         
+        // Ensure we have a valid random instance
+        if (systemRandom == null)
+        {
+            SetRandomSeedFromTime();
+        }
+        
         // Select random upgrade type (with safety check)
-        int randomIndex = Random.Range(0, upgradeTypeConfigs.Count);
+        int randomIndex = systemRandom.Next(0, upgradeTypeConfigs.Count);
         UpgradeTypeConfig selectedConfig = upgradeTypeConfigs[randomIndex];
         upgrade.upgradeType = selectedConfig.upgradeType;
         
         // Calculate value based on rarity
         float rarityMultiplier = GetRarityMultiplier(selectedRarity);
-        float baseValue = Random.Range(selectedConfig.minValue, selectedConfig.maxValue);
+        float baseValue = (float)(systemRandom.NextDouble() * (selectedConfig.maxValue - selectedConfig.minValue) + selectedConfig.minValue);
         upgrade.value = Mathf.Round(baseValue * rarityMultiplier);
         
         // Generate unique name and description
@@ -290,6 +296,13 @@ public class RandomUpgradeGenerator : MonoBehaviour
 
     public List<UpgradeData> GenerateUniqueUpgrades(int count)
     {
+        float currentTime = Time.realtimeSinceStartup;
+        Debug.Log($"[UPGRADE GEN DEBUG] GenerateUniqueUpgrades called for {count} upgrades at time {currentTime:F3} (last: {lastGenerationTime:F3})");
+        
+        // Force additional randomization before generation
+        SetRandomSeedFromTime();
+        lastGenerationTime = currentTime;
+        
         List<UpgradeData> upgrades = new List<UpgradeData>();
         
         // Create a list of all possible upgrade types
@@ -308,13 +321,22 @@ public class RandomUpgradeGenerator : MonoBehaviour
             UpgradeData.UpgradeType.MoreOptions
         };
         
-        // Shuffle the types
-        for (int i = allTypes.Count - 1; i > 0; i--)
+        // Ensure we have a valid random instance
+        if (systemRandom == null)
         {
-            int randomIndex = Random.Range(0, i + 1);
-            var temp = allTypes[i];
-            allTypes[i] = allTypes[randomIndex];
-            allTypes[randomIndex] = temp;
+            SetRandomSeedFromTime();
+        }
+        
+        // Shuffle the types multiple times for better randomization
+        for (int shuffle = 0; shuffle < systemRandom.Next(2, 5); shuffle++)
+        {
+            for (int i = allTypes.Count - 1; i > 0; i--)
+            {
+                int randomIndex = systemRandom.Next(0, i + 1);
+                var temp = allTypes[i];
+                allTypes[i] = allTypes[randomIndex];
+                allTypes[randomIndex] = temp;
+            }
         }
         
         // Take the first 'count' types and generate random upgrades
@@ -322,8 +344,10 @@ public class RandomUpgradeGenerator : MonoBehaviour
         {
             UpgradeData upgrade = GenerateUpgradeOfType(allTypes[i]);
             upgrades.Add(upgrade);
+            Debug.Log($"[UPGRADE GEN DEBUG] Generated: {upgrade.upgradeName} ({upgrade.rarity}) - {upgrade.upgradeType} - Value: {upgrade.value}");
         }
         
+        Debug.Log($"[UPGRADE GEN DEBUG] Returning {upgrades.Count} unique upgrades");
         return upgrades;
     }
 
@@ -336,9 +360,15 @@ public class RandomUpgradeGenerator : MonoBehaviour
         upgrade.rarity = selectedRarity;
         upgrade.upgradeType = config.upgradeType;
         
+        // Ensure we have a valid random instance
+        if (systemRandom == null)
+        {
+            SetRandomSeedFromTime();
+        }
+        
         // Calculate value based on rarity
         float rarityMultiplier = GetRarityMultiplier(selectedRarity);
-        float baseValue = Random.Range(config.minValue, config.maxValue);
+        float baseValue = (float)(systemRandom.NextDouble() * (config.maxValue - config.minValue) + config.minValue);
         upgrade.value = Mathf.Round(baseValue * rarityMultiplier);
         
         // Generate name and description
@@ -361,9 +391,15 @@ public class RandomUpgradeGenerator : MonoBehaviour
         UpgradeTypeConfig config = upgradeTypeConfigs.Find(c => c.upgradeType == type);
         if (config != null)
         {
+            // Ensure we have a valid random instance
+            if (systemRandom == null)
+            {
+                SetRandomSeedFromTime();
+            }
+            
             // Calculate value based on rarity
             float rarityMultiplier = GetRarityMultiplier(selectedRarity);
-            float baseValue = Random.Range(config.minValue, config.maxValue);
+            float baseValue = (float)(systemRandom.NextDouble() * (config.maxValue - config.minValue) + config.minValue);
             upgrade.value = Mathf.Round(baseValue * rarityMultiplier);
             
             // Generate name and description
@@ -376,13 +412,19 @@ public class RandomUpgradeGenerator : MonoBehaviour
 
     private UpgradeData.Rarity SelectRandomRarity()
     {
+        // Ensure we have a valid random instance
+        if (systemRandom == null)
+        {
+            SetRandomSeedFromTime();
+        }
+        
         float totalWeight = 0f;
         foreach (var rarityWeight in rarityWeights)
         {
             totalWeight += rarityWeight.weight;
         }
         
-        float randomValue = Random.Range(0f, totalWeight);
+        float randomValue = (float)(systemRandom.NextDouble() * totalWeight);
         float currentWeight = 0f;
         
         foreach (var rarityWeight in rarityWeights)
@@ -483,11 +525,35 @@ public class RandomUpgradeGenerator : MonoBehaviour
         Random.InitState(seed);
     }
 
+    private static int seedCounter = 0; // Static counter to ensure uniqueness
+    private System.Random systemRandom; // Use System.Random for better control
+    private static float lastGenerationTime = 0f; // Track last generation time
+    
     public void SetRandomSeedFromTime()
     {
-        int seed = (int)(System.DateTime.Now.Ticks % int.MaxValue);
+        // Increment counter for uniqueness
+        seedCounter++;
+        
+        // Use multiple time sources for better entropy + frame count + counter
+        int seed = (int)(System.DateTime.Now.Ticks % int.MaxValue) + 
+                   System.Environment.TickCount + 
+                   (int)(Time.realtimeSinceStartup * 1000f) +
+                   Time.frameCount +
+                   seedCounter * 1000 +
+                   UnityEngine.Random.Range(0, 10000);
+        
+        // Initialize both Unity's Random and our System.Random
         Random.InitState(seed);
-        Debug.Log($"Set random seed to: {seed}");
+        systemRandom = new System.Random(seed);
+        
+        // Advance the random state several times to avoid similar sequences
+        for (int i = 0; i < systemRandom.Next(5, 15); i++)
+        {
+            Random.Range(0f, 1f);
+            systemRandom.NextDouble();
+        }
+        
+        Debug.Log($"[RANDOM SEED DEBUG] Set random seed to: {seed} (counter: {seedCounter}) at time: {System.DateTime.Now:HH:mm:ss.fff}");
     }
 
     private UpgradeData CreateDefaultUpgrade()
@@ -508,5 +574,39 @@ public class RandomUpgradeGenerator : MonoBehaviour
         InitializeDefaultRarityWeights();
         InitializeDefaultUpgradeTypeConfigs();
         Debug.Log($"RandomUpgradeGenerator: Force initialized with {upgradeTypeConfigs.Count} upgrade types");
+    }
+    
+    [ContextMenu("Test Random Generation Quick")]
+    public void TestRandomGenerationQuick()
+    {
+        Debug.Log("=== QUICK RANDOM TEST WITH SYSTEM.RANDOM ===");
+        
+        for (int test = 1; test <= 3; test++)
+        {
+            SetRandomSeedFromTime();
+            List<UpgradeData> testUpgrades = GenerateUniqueUpgrades(3);
+            Debug.Log($"Test {test}:");
+            foreach (var upgrade in testUpgrades)
+            {
+                Debug.Log($"  {upgrade.upgradeName} ({upgrade.rarity}) - {upgrade.upgradeType} - Value: {upgrade.value}");
+            }
+            
+            // Wait a small amount to ensure different timestamps
+            System.Threading.Thread.Sleep(10);
+        }
+    }
+    
+    [ContextMenu("Force New Random Instance")]
+    public void ForceNewRandomInstance()
+    {
+        Debug.Log("=== FORCING NEW RANDOM INSTANCE ===");
+        systemRandom = null;
+        SetRandomSeedFromTime();
+        
+        List<UpgradeData> testUpgrades = GenerateUniqueUpgrades(3);
+        foreach (var upgrade in testUpgrades)
+        {
+            Debug.Log($"New instance: {upgrade.upgradeName} ({upgrade.rarity}) - {upgrade.upgradeType} - Value: {upgrade.value}");
+        }
     }
 }
