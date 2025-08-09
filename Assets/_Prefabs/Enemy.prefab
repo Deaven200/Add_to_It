@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 6146043138592112465}
   - component: {fileID: 940368259449101733}
   - component: {fileID: -3661422699225190641}
+  - component: {fileID: 1271630160412631806}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Enemy
@@ -204,3 +205,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 1
   coinPrefab: {fileID: 9174215519428096625, guid: f694bca4a4e1c7244aad0d7a6c5447ec, type: 3}
+  enemyName: Enemy
+  useIndividualDropRate: 0
+  individualDropRate: 10
+--- !u!114 &1271630160412631806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6127347324644487292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7fab224315eda147882e83c7990363b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 1
+  enemyName: Enemy
+  useIndividualDropRate: 0
+  individualDropRate: 10

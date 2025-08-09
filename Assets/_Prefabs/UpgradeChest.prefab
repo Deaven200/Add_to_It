@@ -148,6 +148,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   upgradeManager: {fileID: 0}
   canInteract: 1
-  interactionPrompt: Press E to open upgrade chest
+  openOnTouch: 1
+  interactionRange: 2
   normalMaterial: {fileID: 0}
   highlightMaterial: {fileID: 0}
+  openedMaterial: {fileID: 0}
+  openSound: {fileID: 0}
+  closeSound: {fileID: 0}

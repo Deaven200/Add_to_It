@@ -22,7 +22,7 @@ public class CameraController : MonoBehaviour
     public float maxPitch = 85f;
 
     private float pitch = 0f;  // vertical rotation
-    private UpgradeSelectionUI upgradeManager;
+    private UpgradeManager upgradeManager;
     private Vector3 targetCameraPosition;
     private bool isTransitioning = false;
 
@@ -31,7 +31,7 @@ public class CameraController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         
         // Find the upgrade manager to check pause state
-        upgradeManager = FindObjectOfType<UpgradeSelectionUI>();
+        upgradeManager = FindObjectOfType<UpgradeManager>();
         
         // Set initial camera position
         if (mainCamera != null)

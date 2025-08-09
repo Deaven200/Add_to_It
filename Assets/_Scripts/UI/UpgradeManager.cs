@@ -1,10 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI; // Add this for LayoutRebuilder
 
-public class UpgradeSelectionUI : MonoBehaviour
+public class UpgradeManager : MonoBehaviour
 {
-    public List<UpgradeData> possibleUpgrades;
-
+    [Header("Upgrade Generation")]
+    [SerializeField] private RandomUpgradeGenerator upgradeGenerator;
+    [SerializeField] private int baseUpgradesToShow = 3;
+    [SerializeField] private int maxUpgradesToShow = 9;
+    
+    [Header("UI References")]
     [SerializeField] private GameObject upgradePanelPrefab;
     [SerializeField] private GameObject upgradeCardPrefab;
     [SerializeField] private GameObject canvas;
@@ -12,24 +17,74 @@ public class UpgradeSelectionUI : MonoBehaviour
     private GameObject _activeUpgradeInstance;
     private GameObject _buttonContainerInstance;
     private UpgradeChest _currentChest; // Reference to the chest that opened this menu
+    private List<UpgradeData> _currentUpgrades = new List<UpgradeData>();
+    
+    // Track upgrade options bonus
+    private int upgradeOptionsBonus = 0;
 
     public bool isPaused = false;
+    
+    private void Awake()
+    {
+        // Try to find the upgrade generator if not assigned
+        if (upgradeGenerator == null)
+        {
+            upgradeGenerator = FindObjectOfType<RandomUpgradeGenerator>();
+            if (upgradeGenerator == null)
+            {
+                // Create one if it doesn't exist
+                GameObject generatorGO = new GameObject("RandomUpgradeGenerator");
+                upgradeGenerator = generatorGO.AddComponent<RandomUpgradeGenerator>();
+            }
+        }
+    }
     
     public void ShowUpgradeChoices()
     {
         _activeUpgradeInstance.SetActive(true);
 
-        // Create a button for each level
-        foreach(UpgradeData upgradeData in possibleUpgrades)
+        // Calculate how many upgrades to show (base + bonus, capped at max)
+        int upgradesToShow = Mathf.Min(baseUpgradesToShow + upgradeOptionsBonus, maxUpgradesToShow);
+        
+        // Force random seed before generating upgrades
+        if (upgradeGenerator != null)
+        {
+            upgradeGenerator.SetRandomSeedFromTime();
+        }
+        
+        // Generate random upgrades (use regular method instead of different)
+        _currentUpgrades = upgradeGenerator.GenerateUniqueUpgrades(upgradesToShow);
+
+        // Clear any existing cards first
+        if (_buttonContainerInstance != null)
+        {
+            foreach (Transform child in _buttonContainerInstance.transform)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        // Create a button for each upgrade
+        foreach(UpgradeData upgradeData in _currentUpgrades)
         {
             GameObject cardGO = Instantiate(upgradeCardPrefab, _buttonContainerInstance.transform);
             cardGO.GetComponent<UpgradeCard>().SetUpgradeData(upgradeData);
+            
+            // Debug log each upgrade being created
+            Debug.Log($"Created upgrade card: {upgradeData.upgradeName} ({upgradeData.rarity}) - {upgradeData.description}");
+        }
+        
+        // Force layout update to ensure proper positioning
+        Canvas.ForceUpdateCanvases();
+        if (_buttonContainerInstance != null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_buttonContainerInstance.GetComponent<RectTransform>());
         }
     }
 
     public void SelectUpgrade(UpgradeData upgrade)
     {
-        Debug.Log($"Upgrade selected: {upgrade.upgradeName}");
+        Debug.Log($"Upgrade selected: {upgrade.upgradeName} ({upgrade.rarity})");
         
         // Apply the upgrade based on its type
         ApplyUpgrade(upgrade);
@@ -67,12 +122,26 @@ public class UpgradeSelectionUI : MonoBehaviour
                 break;
                 
             case UpgradeData.UpgradeType.Damage:
-                // Apply damage upgrade to player shooting
-                PlayerShooting playerShooting = player.GetComponent<PlayerShooting>();
-                if (playerShooting != null)
+                // Apply damage upgrade to weapon manager
+                WeaponManager weaponManager = WeaponManager.Instance;
+                if (weaponManager != null && weaponManager.GetCurrentWeapon() != null)
                 {
-                    // You'll need to add a damage field to PlayerShooting
-                    Debug.Log($"Applied damage upgrade: +{upgrade.value}");
+                    WeaponData currentWeapon = weaponManager.GetCurrentWeapon();
+                    currentWeapon.damage += upgrade.value;
+                    Debug.Log($"Applied damage upgrade: +{upgrade.value} (Total: {currentWeapon.damage})");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.FireRate:
+                // Apply fire rate upgrade to weapon manager
+                WeaponManager weaponMgr = WeaponManager.Instance;
+                if (weaponMgr != null && weaponMgr.GetCurrentWeapon() != null)
+                {
+                    WeaponData weapon = weaponMgr.GetCurrentWeapon();
+                    // Calculate new fire rate (lower = faster shooting)
+                    float fireRateReduction = weapon.fireRate * (upgrade.value / 100f);
+                    weapon.fireRate = Mathf.Max(0.1f, weapon.fireRate - fireRateReduction);
+                    Debug.Log($"Applied fire rate upgrade: +{upgrade.value}% (New rate: {weapon.fireRate}s between shots)");
                 }
                 break;
                 
@@ -82,8 +151,62 @@ public class UpgradeSelectionUI : MonoBehaviour
                 if (playerMovement != null)
                 {
                     // You'll need to add a speed field to PlayerMovement
-                    Debug.Log($"Applied speed upgrade: +{upgrade.value}");
+                    Debug.Log($"Applied speed upgrade: +{upgrade.value}%");
                 }
+                break;
+                
+            case UpgradeData.UpgradeType.DamageResistance:
+                // Apply damage resistance to player health
+                PlayerHealth health = player.GetComponent<PlayerHealth>();
+                if (health != null)
+                {
+                    // You'll need to add damage resistance to PlayerHealth
+                    Debug.Log($"Applied damage resistance: +{upgrade.value}%");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.LifeOnKill:
+                // Apply life on kill to player
+                Debug.Log($"Applied life on kill: +{upgrade.value} health per kill");
+                break;
+                
+            case UpgradeData.UpgradeType.CoinMagnetRange:
+                // Apply coin magnet range
+                Debug.Log($"Applied coin magnet range: +{upgrade.value}%");
+                break;
+                
+            case UpgradeData.UpgradeType.Shield:
+                // Apply shield to player
+                PlayerHealth playerHealthShield = player.GetComponent<PlayerHealth>();
+                if (playerHealthShield != null)
+                {
+                    // You'll need to add shield functionality to PlayerHealth
+                    Debug.Log($"Applied shield: +{upgrade.value} shield points");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.ChestDropRate:
+                // Apply chest drop rate increase
+                EnemyDropManager dropManager = EnemyDropManager.Instance;
+                if (dropManager != null)
+                {
+                    float currentRate = dropManager.GetGlobalDropRate();
+                    float newRate = currentRate + upgrade.value;
+                    dropManager.SetGlobalDropRate(newRate);
+                    Debug.Log($"Applied chest drop rate: +{upgrade.value}% (New rate: {newRate}%)");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.ExplosionOnKill:
+                // Apply explosion on kill
+                Debug.Log($"Applied explosion on kill: {upgrade.value} radius");
+                break;
+                
+            case UpgradeData.UpgradeType.MoreOptions:
+                // Apply more upgrade options
+                upgradeOptionsBonus += (int)upgrade.value;
+                upgradeOptionsBonus = Mathf.Min(upgradeOptionsBonus, maxUpgradesToShow - baseUpgradesToShow);
+                Debug.Log($"Applied more options upgrade: +{upgrade.value} (Total bonus: {upgradeOptionsBonus})");
                 break;
                 
             default:
@@ -139,5 +262,18 @@ public class UpgradeSelectionUI : MonoBehaviour
             _buttonContainerInstance = _activeUpgradeInstance.transform.Find("UpgradeButtonContainer").gameObject;
             ShowUpgradeChoices();
         }
+    }
+    
+    // Getter for current upgrade options bonus
+    public int GetUpgradeOptionsBonus()
+    {
+        return upgradeOptionsBonus;
+    }
+    
+    // Method to reset upgrade options bonus (for testing or game reset)
+    public void ResetUpgradeOptionsBonus()
+    {
+        upgradeOptionsBonus = 0;
+        Debug.Log("Upgrade options bonus reset to 0");
     }
 }

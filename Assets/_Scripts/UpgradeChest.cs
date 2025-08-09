@@ -3,20 +3,27 @@ using UnityEngine;
 public class UpgradeChest : MonoBehaviour
 {
     [Header("Upgrade Manager Reference")]
-    public UpgradeSelectionUI upgradeManager;
+    public UpgradeManager upgradeManager;
     
     [Header("Interaction Settings")]
     public bool canInteract = true;
-    public bool openOnTouch = true; // New setting to control automatic opening
+    public bool openOnTouch = true;
     [Range(0.5f, 5f)]
-    public float interactionRange = 2f; // Configurable interaction range
+    public float interactionRange = 2f;
     
     [Header("Visual Feedback")]
     public Material normalMaterial;
     public Material highlightMaterial;
+    public Material openedMaterial; // New material for when chest is opened
     private Renderer chestRenderer;
     
+    [Header("Audio")]
+    public AudioClip openSound;
+    public AudioClip closeSound;
+    private AudioSource audioSource;
+    
     private bool playerInRange = false;
+    private bool isOpened = false;
     private Transform playerTransform;
     
     void Start()
@@ -24,10 +31,17 @@ public class UpgradeChest : MonoBehaviour
         // Get the renderer for visual feedback
         chestRenderer = GetComponent<Renderer>();
         
+        // Get or add audio source
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+        
         // Try to find the upgrade manager if not assigned
         if (upgradeManager == null)
         {
-            upgradeManager = FindObjectOfType<UpgradeSelectionUI>();
+            upgradeManager = FindObjectOfType<UpgradeManager>();
         }
         
         // Try to find the player
@@ -46,6 +60,9 @@ public class UpgradeChest : MonoBehaviour
     
     void Update()
     {
+        // Don't process if already opened
+        if (isOpened) return;
+        
         // Check distance to player for range-based interaction
         if (playerTransform != null && canInteract)
         {
@@ -72,7 +89,7 @@ public class UpgradeChest : MonoBehaviour
                     }
                     else
                     {
-                        // Show interaction prompt (you can implement UI here)
+                        // Show interaction prompt
                         Debug.Log("Press E to open upgrade chest");
                     }
                 }
@@ -102,8 +119,7 @@ public class UpgradeChest : MonoBehaviour
     
     void OnTriggerEnter(Collider other)
     {
-        // Keep this for backward compatibility, but range-based detection takes priority
-        if (other.CompareTag("Player") && !openOnTouch)
+        if (other.CompareTag("Player") && !openOnTouch && !isOpened)
         {
             playerInRange = true;
             
@@ -119,7 +135,6 @@ public class UpgradeChest : MonoBehaviour
     
     void OnTriggerExit(Collider other)
     {
-        // Keep this for backward compatibility
         if (other.CompareTag("Player") && !openOnTouch)
         {
             playerInRange = false;
@@ -134,12 +149,28 @@ public class UpgradeChest : MonoBehaviour
     
     void OpenUpgradeManager()
     {
-        if (upgradeManager != null)
+        if (upgradeManager != null && !isOpened)
         {
+            // Mark as opened
+            isOpened = true;
+            
+            // Change material to opened state
+            if (chestRenderer != null && openedMaterial != null)
+            {
+                chestRenderer.material = openedMaterial;
+            }
+            
+            // Play open sound
+            if (audioSource != null && openSound != null)
+            {
+                audioSource.PlayOneShot(openSound);
+            }
+            
+            // Open the upgrade manager
             upgradeManager.OnUpgradeButtonPressed(this);
             upgradeManager.PauseGame();
             
-            // Optional: Disable interaction after use
+            // Disable interaction after use
             canInteract = false;
             
             Debug.Log("Upgrade chest opened!");
@@ -150,12 +181,25 @@ public class UpgradeChest : MonoBehaviour
         }
     }
     
-    // Alternative method for automatic opening on collision (without key press)
+    // Alternative method for automatic opening on collision
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Player") && canInteract && openOnTouch)
+        if (collision.gameObject.CompareTag("Player") && canInteract && openOnTouch && !isOpened)
         {
             OpenUpgradeManager();
+        }
+    }
+    
+    // Method to reset chest (for testing)
+    [ContextMenu("Reset Chest")]
+    public void ResetChest()
+    {
+        isOpened = false;
+        canInteract = true;
+        
+        if (chestRenderer != null && normalMaterial != null)
+        {
+            chestRenderer.material = normalMaterial;
         }
     }
     
