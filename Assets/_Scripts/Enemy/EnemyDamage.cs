@@ -8,6 +8,7 @@ public class EnemyDamage : MonoBehaviour
 
     private float lastDamageTime;
     private Transform player;
+    private bool isDamaging = false; // Track if currently damaging
 
     void Start()
     {
@@ -23,14 +24,33 @@ public class EnemyDamage : MonoBehaviour
         if (player == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
-        if (distance <= damageRange && Time.time - lastDamageTime > damageCooldown)
+        
+        // Check if we can damage the player
+        bool canDamage = distance <= damageRange && Time.time - lastDamageTime > damageCooldown;
+        
+        if (canDamage && !isDamaging)
         {
             PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
             if (playerHealth != null)
             {
+                isDamaging = true;
                 playerHealth.TakeDamage(damageAmount);
                 lastDamageTime = Time.time;
+                
+                Debug.Log($"[{gameObject.name}] Dealt {damageAmount} damage to player. Player health: {playerHealth.currentHealth}/{playerHealth.maxHealth}");
             }
         }
+        else if (distance > damageRange && isDamaging)
+        {
+            // Reset damage flag when player moves out of range
+            isDamaging = false;
+        }
+    }
+    
+    // Optional: Visual debugging in scene view
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, damageRange);
     }
 }

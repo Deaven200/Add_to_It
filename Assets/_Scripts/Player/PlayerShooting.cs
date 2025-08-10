@@ -2,34 +2,41 @@ using UnityEngine;
 
 public class PlayerShooting : MonoBehaviour
 {
-    public GameObject bulletPrefab;
-    public Transform spawnPoint;
-    public float fireRate = 0.5f;
-    private float nextFireTime = 0f;
-
-    private Camera cam;
-
+    [Header("References")]
+    [SerializeField] private WeaponManager weaponManager;
+    
+    [Header("Input")]
+    [SerializeField] private KeyCode shootKey = KeyCode.Mouse0;
+    [SerializeField] private KeyCode reloadKey = KeyCode.R;
+    
     void Start()
     {
-        cam = Camera.main;
+        // Try to find weapon manager if not assigned
+        if (weaponManager == null)
+        {
+            weaponManager = FindObjectOfType<WeaponManager>();
+        }
+        
+        if (weaponManager == null)
+        {
+            Debug.LogError("WeaponManager not found! Please assign it in the inspector.");
+        }
     }
 
     void Update()
     {
-        if (Input.GetMouseButton(0) && Time.time >= nextFireTime)
+        if (weaponManager == null) return;
+        
+        // Handle shooting
+        if (Input.GetKey(shootKey))
         {
-            nextFireTime = Time.time + fireRate;
-            Shoot();
+            weaponManager.Shoot();
         }
-    }
-
-    void Shoot()
-    {
-        // Create bullet and aim it where the camera is looking
-        GameObject bullet = Instantiate(bulletPrefab, spawnPoint.position, Quaternion.identity);
-
-        // Set its direction to match the camera's forward
-        Rigidbody rb = bullet.GetComponent<Rigidbody>();
-        rb.velocity = cam.transform.forward * 20f;
+        
+        // Handle reloading
+        if (Input.GetKeyDown(reloadKey))
+        {
+            weaponManager.Reload();
+        }
     }
 }

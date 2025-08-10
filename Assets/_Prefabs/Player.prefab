@@ -25,11 +25,11 @@ Transform:
   m_GameObject: {fileID: 469139100570681261}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.733, z: 0.843}
+  m_LocalPosition: {x: -1.2274747, y: 1.9235172, z: 1.9599209}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2354309205396886811}
+  m_Father: {fileID: 1637073090570381920}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1485282375026175312
 GameObject:
@@ -81,6 +81,8 @@ GameObject:
   - component: {fileID: 1646300827693031431}
   - component: {fileID: 8722726925895506024}
   - component: {fileID: 4763436230409790303}
+  - component: {fileID: 489202845382975494}
+  - component: {fileID: 5456237145238079809}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -96,13 +98,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5974432704305552662}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -3, z: -22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8724952666069553567}
-  - {fileID: 7426419479482541592}
+  - {fileID: 1637073090570381920}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4537989391357129962
@@ -245,9 +247,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79570887050f00943ba283e18f1f1636, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 1
-  currentHealth: 0
-  deathMessage: {fileID: 0}
+  maxHealth: 10
+  currentHealth: 10
 --- !u!114 &8722726925895506024
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -260,9 +261,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cd567bbfd2727f48b2828f0a6027dc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bulletPrefab: {fileID: 1078450575591901480, guid: 7c1a694fe102462448ec1f4e9b0fdc6d, type: 3}
-  spawnPoint: {fileID: 7426419479482541592}
-  fireRate: 0.5
+  weaponManager: {fileID: 0}
+  shootKey: 323
+  reloadKey: 114
 --- !u!114 &4763436230409790303
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,7 +277,50 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   money: 0
-  moneyText: {fileID: 0}
+--- !u!114 &489202845382975494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5974432704305552662}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65f9e257ed332ac428253bb9365e4fc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 2354309205396886811}
+  cameraPivot: {fileID: 9178434382626906027}
+  mainCamera: {fileID: 1034867906136299655}
+  thirdPersonOffset: {x: 0, y: 1.5, z: -4}
+  firstPersonOffset: {x: 0, y: 1.5, z: 0.2}
+  mouseSensitivity: 3
+  isFirstPerson: 0
+  smoothTransition: 1
+  transitionSpeed: 5
+  minPitch: -60
+  maxPitch: 85
+--- !u!114 &5456237145238079809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5974432704305552662}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b8d49ba2ae596a4da389ba2c8c97b8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  availableWeapons:
+  - {fileID: 11400000, guid: a10670605c584df449522ac1902d3652, type: 2}
+  currentWeapon: {fileID: 0}
+  weaponHolder: {fileID: 1637073090570381920}
+  spawnPoint: {fileID: 7426419479482541592}
+  weaponSelectionUI: {fileID: 0}
+  weaponCardPrefab: {fileID: 6843602678758692538, guid: 2bf7ed98a865aef419201e1421430ff4, type: 3}
+  weaponCardContainer: {fileID: 0}
+  audioSource: {fileID: 0}
 --- !u!1 &7042971967595143729
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,4 +444,36 @@ Transform:
   m_Children:
   - {fileID: 1034867906136299655}
   m_Father: {fileID: 8724952666069553567}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8279598669664539555
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1637073090570381920}
+  m_Layer: 0
+  m_Name: Weapon Holder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1637073090570381920
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8279598669664539555}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.2274747, y: -1.1905172, z: -1.116921}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7426419479482541592}
+  m_Father: {fileID: 2354309205396886811}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
