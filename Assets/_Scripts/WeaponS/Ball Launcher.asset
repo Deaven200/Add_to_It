@@ -16,15 +16,15 @@ MonoBehaviour:
   description: A simple ball launcher...
   weaponIcon: {fileID: 0}
   weaponPrefab: {fileID: 1078450575591901480, guid: 7c1a694fe102462448ec1f4e9b0fdc6d, type: 3}
-  damage: 10
+  damage: 1
   fireRate: 1
   bulletSpeed: 20
   maxAmmo: -1
   reloadTime: 1
   weaponType: 0
   hasExplosion: 0
-  explosionRadius: 2
+  explosionRadius: 0
   hasPiercing: 0
-  pierceCount: 1
+  pierceCount: 0
   shootSound: {fileID: 0}
   reloadSound: {fileID: 0}

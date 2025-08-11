@@ -59,7 +59,7 @@ public class PlayerMoney : MonoBehaviour
     void UpdateMoneyUI()
     {
         // This is now handled by UIManager, but kept as fallback
-        Debug.Log($"PlayerMoney: Money updated to {money}");
+        // Money updated successfully
     }
     
     public int GetMoney()

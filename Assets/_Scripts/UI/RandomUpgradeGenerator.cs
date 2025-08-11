@@ -87,7 +87,6 @@ public class RandomUpgradeGenerator : MonoBehaviour
                    generationCounter * 1000;
         
         systemRandom = new System.Random(seed);
-        Debug.Log($"[CLEAN RANDOM] Created fresh generator with seed: {seed} (generation: {generationCounter})");
     }
 
     public List<UpgradeData> GenerateUniqueUpgrades(int count)
@@ -95,7 +94,7 @@ public class RandomUpgradeGenerator : MonoBehaviour
         // Always create a fresh generator for each call to ensure randomness
         CreateFreshRandomGenerator();
         
-        Debug.Log($"[CLEAN RANDOM] Generating {count} unique upgrades");
+        // Generate unique upgrades
         
         List<UpgradeData> upgrades = new List<UpgradeData>();
         List<UpgradeData.UpgradeType> availableTypes = new List<UpgradeData.UpgradeType>
@@ -127,7 +126,7 @@ public class RandomUpgradeGenerator : MonoBehaviour
         {
             UpgradeData upgrade = GenerateUpgradeOfType(availableTypes[i]);
             upgrades.Add(upgrade);
-            Debug.Log($"[CLEAN RANDOM] Generated: {upgrade.upgradeName} ({upgrade.rarity}) - Value: {upgrade.value}");
+            // Upgrade generated successfully
         }
 
         return upgrades;
@@ -245,16 +244,9 @@ public class RandomUpgradeGenerator : MonoBehaviour
     [ContextMenu("Test Clean Generation")]
     public void TestCleanGeneration()
     {
-        Debug.Log("=== TESTING CLEAN GENERATION ===");
-        
         for (int test = 1; test <= 3; test++)
         {
             List<UpgradeData> testUpgrades = GenerateUniqueUpgrades(3);
-            Debug.Log($"Test {test}:");
-            foreach (var upgrade in testUpgrades)
-            {
-                Debug.Log($"  {upgrade.upgradeName} ({upgrade.rarity}) - {upgrade.upgradeType} - Value: {upgrade.value}");
-            }
             
             // Small delay to ensure different seeds
             System.Threading.Thread.Sleep(50);

@@ -37,7 +37,7 @@ public class EnemyDamage : MonoBehaviour
                 playerHealth.TakeDamage(damageAmount);
                 lastDamageTime = Time.time;
                 
-                Debug.Log($"[{gameObject.name}] Dealt {damageAmount} damage to player. Player health: {playerHealth.currentHealth}/{playerHealth.maxHealth}");
+                // Damage applied successfully
             }
         }
         else if (distance > damageRange && isDamaging)

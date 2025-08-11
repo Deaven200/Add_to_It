@@ -90,7 +90,6 @@ public class UpgradeChest : MonoBehaviour
                     else
                     {
                         // Show interaction prompt
-                        Debug.Log("Press E to open upgrade chest");
                     }
                 }
             }
@@ -129,7 +128,7 @@ public class UpgradeChest : MonoBehaviour
                 chestRenderer.material = highlightMaterial;
             }
             
-            Debug.Log("Press E to open upgrade chest");
+            // Show interaction prompt
         }
     }
     
@@ -173,7 +172,7 @@ public class UpgradeChest : MonoBehaviour
             // Disable interaction after use
             canInteract = false;
             
-            Debug.Log("Upgrade chest opened!");
+            // Upgrade chest opened successfully
         }
         else
         {

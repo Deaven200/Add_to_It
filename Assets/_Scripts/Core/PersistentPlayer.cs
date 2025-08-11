@@ -27,12 +27,12 @@ public class PersistentPlayer : MonoBehaviour
             // Subscribe to scene loading
             SceneManager.sceneLoaded += OnSceneLoaded;
             
-            Debug.Log("Persistent Player created and will survive scene changes");
+            // Persistent Player created and will survive scene changes
         }
         else
         {
             // Destroy duplicate players
-            Debug.Log("Duplicate player found and destroyed");
+            // Duplicate player found and destroyed
             Destroy(gameObject);
             return;
         }
@@ -56,7 +56,7 @@ public class PersistentPlayer : MonoBehaviour
     
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"Scene loaded: {scene.name}");
+        // Scene loaded
         
         // Reset death state when entering new scene
         isDead = false;
@@ -97,7 +97,7 @@ public class PersistentPlayer : MonoBehaviour
             transform.position = spawnPoint.position;
             transform.rotation = spawnPoint.rotation;
             lastSpawnPosition = spawnPoint.position;
-            Debug.Log($"Player moved to spawn point: {spawnPoint.name}");
+                            // Player moved to spawn point
         }
         else
         {
@@ -110,7 +110,7 @@ public class PersistentPlayer : MonoBehaviour
         if (isDead) return; // Prevent multiple death calls
         
         isDead = true;
-        Debug.Log("Player died! Respawning in PlayerRoom...");
+                    // Player died! Respawning in PlayerRoom
         
         // Disable player controls
         DisablePlayerControls();

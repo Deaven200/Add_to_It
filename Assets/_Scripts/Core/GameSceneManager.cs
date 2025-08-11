@@ -61,7 +61,7 @@ public class GameSceneManager : MonoBehaviour
     /// </summary>
     public void QuitGame()
     {
-        Debug.Log("QUIT GAME: Application.Quit() called."); // For testing in the editor
+        // Quit the game
         Application.Quit();
     }
 }

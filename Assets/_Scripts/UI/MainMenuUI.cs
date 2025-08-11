@@ -21,7 +21,7 @@ public class MainMenuUI : MonoBehaviour
     {
         // We access the Singleton instance of our GameSceneManager
         // and call its public method to load the level.
-        Debug.Log("Start Button Pressed. Loading level...");
+        // Load the first playable level
         GameSceneManager.Instance.LoadLevel(FIRST_LEVEL_SCENE_NAME);
     }
 
@@ -38,7 +38,7 @@ public class MainMenuUI : MonoBehaviour
     /// </summary>
     public void OnQuitButtonPressed()
     {
-        Debug.Log("Quit Button Pressed.");
+        // Quit the game
         GameSceneManager.Instance.QuitGame();
     }
 

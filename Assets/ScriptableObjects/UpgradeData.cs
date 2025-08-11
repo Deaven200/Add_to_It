@@ -29,6 +29,9 @@ public class UpgradeData : ScriptableObject
         Shield,
         Health,
         MoreOptions, // New upgrade type for more upgrade options
+        BulletSpeed, // New weapon upgrade type
+        AmmoCapacity, // New weapon upgrade type
+        ReloadSpeed, // New weapon upgrade type
         // You can add more types later
     }
 

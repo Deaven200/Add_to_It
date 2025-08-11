@@ -27,15 +27,12 @@ public class EnemyStatManager : MonoBehaviour
         {
             case 0:
                 health += 1f;
-                Debug.Log("Increased enemy health: " + health);
                 break;
             case 1:
                 speed += 1f;
-                Debug.Log("Increased enemy speed: " + speed);
                 break;
             case 2:
                 damage += 1f;
-                Debug.Log("Increased enemy damage: " + damage);
                 break;
         }
     }

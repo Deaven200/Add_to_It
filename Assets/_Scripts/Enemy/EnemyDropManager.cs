@@ -82,7 +82,7 @@ public class EnemyDropManager : MonoBehaviour
         // Spawn the chest
         GameObject chest = Instantiate(dropSettings.chestPrefab, chestPosition, Quaternion.identity);
         
-        Debug.Log($"Chest dropped from {enemyName} at position {chestPosition}");
+        // Chest dropped successfully
     }
     
     /// <summary>
@@ -91,7 +91,7 @@ public class EnemyDropManager : MonoBehaviour
     public void SetGlobalDropRate(float dropRate)
     {
         dropSettings.chestDropRate = Mathf.Clamp(dropRate, 0f, 100f);
-        Debug.Log($"Global chest drop rate set to {dropSettings.chestDropRate}%");
+        // Global chest drop rate updated
     }
     
     /// <summary>

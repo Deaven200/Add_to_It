@@ -38,7 +38,7 @@ public class PlayerHealth : MonoBehaviour
             }
         }
         
-        Debug.Log($"PlayerHealth: Starting with {currentHealth}/{maxHealth} (from inspector: {maxHealth})");
+        // Notify UI of initial health
         
         // Notify UI of initial health
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -67,7 +67,7 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= amount;
         currentHealth = Mathf.Max(0, currentHealth); // Ensure health doesn't go below 0
         
-        Debug.Log("Player took damage. Health: " + currentHealth);
+        // Notify UI of health change
         
         // Notify UI of health change
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -89,7 +89,7 @@ public class PlayerHealth : MonoBehaviour
         currentHealth += amount;
         currentHealth = Mathf.Min(currentHealth, maxHealth); // Ensure health doesn't exceed max
         
-        Debug.Log("Player healed. Health: " + currentHealth);
+        // Notify UI of health change
         
         // Notify UI of health change
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -106,7 +106,7 @@ public class PlayerHealth : MonoBehaviour
         maxHealth = newMaxHealth;
         currentHealth = Mathf.Min(currentHealth, maxHealth); // Adjust current health if needed
         
-        Debug.Log("Max health set to: " + maxHealth);
+        // Notify UI of health change
         
         // Notify UI of health change
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -133,7 +133,7 @@ public class PlayerHealth : MonoBehaviour
             movement.enabled = false;
         }
         
-        Debug.Log("Player died - death screen should be shown");
+        // Show death screen using UIManager
     }
     
     // Testing methods for changing max health

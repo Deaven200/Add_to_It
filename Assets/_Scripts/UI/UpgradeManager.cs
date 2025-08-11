@@ -49,7 +49,6 @@ public class UpgradeManager : MonoBehaviour
         // Generate random upgrades - the new clean generator handles randomness internally
         if (upgradeGenerator != null)
         {
-            Debug.Log("[UPGRADE MANAGER] Generating new random upgrades for chest opening");
             _currentUpgrades = upgradeGenerator.GenerateUniqueUpgrades(upgradesToShow);
         }
         else
@@ -68,14 +67,10 @@ public class UpgradeManager : MonoBehaviour
         }
 
         // Create a button for each upgrade
-        Debug.Log($"[CHEST DEBUG] Creating {_currentUpgrades.Count} upgrade cards:");
         foreach(UpgradeData upgradeData in _currentUpgrades)
         {
             GameObject cardGO = Instantiate(upgradeCardPrefab, _buttonContainerInstance.transform);
             cardGO.GetComponent<UpgradeCard>().SetUpgradeData(upgradeData);
-            
-            // Debug log each upgrade being created with more details
-            Debug.Log($"[CHEST DEBUG] Card: {upgradeData.upgradeName} ({upgradeData.rarity}) - {upgradeData.description} - Value: {upgradeData.value} - Type: {upgradeData.upgradeType}");
         }
         
         // Force layout update to ensure proper positioning
@@ -88,8 +83,6 @@ public class UpgradeManager : MonoBehaviour
 
     public void SelectUpgrade(UpgradeData upgrade)
     {
-        Debug.Log($"[CHEST DEBUG] Upgrade selected: {upgrade.upgradeName} ({upgrade.rarity})");
-        
         // Apply the upgrade based on its type
         ApplyUpgrade(upgrade);
         
@@ -99,7 +92,6 @@ public class UpgradeManager : MonoBehaviour
         // Destroy the upgrade panel to ensure fresh generation next time
         if (_activeUpgradeInstance != null)
         {
-            Debug.Log("[CHEST DEBUG] Destroying upgrade panel for fresh generation next time");
             Destroy(_activeUpgradeInstance);
             _activeUpgradeInstance = null;
             _buttonContainerInstance = null;
@@ -108,7 +100,6 @@ public class UpgradeManager : MonoBehaviour
         // Remove the chest that opened this menu
         if (_currentChest != null)
         {
-            Debug.Log($"[CHEST DEBUG] Destroying chest with ID: {_currentChest.GetInstanceID()}");
             Destroy(_currentChest.gameObject);
             _currentChest = null;
         }
@@ -140,9 +131,8 @@ public class UpgradeManager : MonoBehaviour
                 WeaponManager weaponManager = WeaponManager.Instance;
                 if (weaponManager != null && weaponManager.GetCurrentWeapon() != null)
                 {
-                    WeaponData currentWeapon = weaponManager.GetCurrentWeapon();
-                    currentWeapon.damage += upgrade.value;
-                    Debug.Log($"Applied damage upgrade: +{upgrade.value} (Total: {currentWeapon.damage})");
+                    PlayerWeaponData currentWeapon = weaponManager.GetCurrentWeapon();
+                    currentWeapon.AddDamageModifier(upgrade.value);
                 }
                 break;
                 
@@ -151,11 +141,38 @@ public class UpgradeManager : MonoBehaviour
                 WeaponManager weaponMgr = WeaponManager.Instance;
                 if (weaponMgr != null && weaponMgr.GetCurrentWeapon() != null)
                 {
-                    WeaponData weapon = weaponMgr.GetCurrentWeapon();
-                    // Calculate new fire rate (lower = faster shooting)
-                    float fireRateReduction = weapon.fireRate * (upgrade.value / 100f);
-                    weapon.fireRate = Mathf.Max(0.1f, weapon.fireRate - fireRateReduction);
-                    Debug.Log($"Applied fire rate upgrade: +{upgrade.value}% (New rate: {weapon.fireRate}s between shots)");
+                    PlayerWeaponData weapon = weaponMgr.GetCurrentWeapon();
+                    weapon.AddFireRateModifier(upgrade.value);
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.BulletSpeed:
+                // Apply bullet speed upgrade to weapon manager
+                WeaponManager bulletSpeedMgr = WeaponManager.Instance;
+                if (bulletSpeedMgr != null && bulletSpeedMgr.GetCurrentWeapon() != null)
+                {
+                    PlayerWeaponData bulletWeapon = bulletSpeedMgr.GetCurrentWeapon();
+                    bulletWeapon.AddBulletSpeedModifier(upgrade.value);
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.AmmoCapacity:
+                // Apply ammo capacity upgrade to weapon manager
+                WeaponManager ammoMgr = WeaponManager.Instance;
+                if (ammoMgr != null && ammoMgr.GetCurrentWeapon() != null)
+                {
+                    PlayerWeaponData ammoWeapon = ammoMgr.GetCurrentWeapon();
+                    ammoWeapon.AddAmmoModifier((int)upgrade.value);
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.ReloadSpeed:
+                // Apply reload speed upgrade to weapon manager
+                WeaponManager reloadMgr = WeaponManager.Instance;
+                if (reloadMgr != null && reloadMgr.GetCurrentWeapon() != null)
+                {
+                    PlayerWeaponData reloadWeapon = reloadMgr.GetCurrentWeapon();
+                    reloadWeapon.AddReloadTimeModifier(upgrade.value);
                 }
                 break;
                 
@@ -165,7 +182,6 @@ public class UpgradeManager : MonoBehaviour
                 if (playerMovement != null)
                 {
                     // You'll need to add a speed field to PlayerMovement
-                    Debug.Log($"Applied speed upgrade: +{upgrade.value}%");
                 }
                 break;
                 
@@ -175,18 +191,15 @@ public class UpgradeManager : MonoBehaviour
                 if (health != null)
                 {
                     // You'll need to add damage resistance to PlayerHealth
-                    Debug.Log($"Applied damage resistance: +{upgrade.value}%");
                 }
                 break;
                 
             case UpgradeData.UpgradeType.LifeOnKill:
                 // Apply life on kill to player
-                Debug.Log($"Applied life on kill: +{upgrade.value} health per kill");
                 break;
                 
             case UpgradeData.UpgradeType.CoinMagnetRange:
                 // Apply coin magnet range
-                Debug.Log($"Applied coin magnet range: +{upgrade.value}%");
                 break;
                 
             case UpgradeData.UpgradeType.Shield:
@@ -195,7 +208,6 @@ public class UpgradeManager : MonoBehaviour
                 if (playerHealthShield != null)
                 {
                     // You'll need to add shield functionality to PlayerHealth
-                    Debug.Log($"Applied shield: +{upgrade.value} shield points");
                 }
                 break;
                 
@@ -207,20 +219,17 @@ public class UpgradeManager : MonoBehaviour
                     float currentRate = dropManager.GetGlobalDropRate();
                     float newRate = currentRate + upgrade.value;
                     dropManager.SetGlobalDropRate(newRate);
-                    Debug.Log($"Applied chest drop rate: +{upgrade.value}% (New rate: {newRate}%)");
                 }
                 break;
                 
             case UpgradeData.UpgradeType.ExplosionOnKill:
                 // Apply explosion on kill
-                Debug.Log($"Applied explosion on kill: {upgrade.value} radius");
                 break;
                 
             case UpgradeData.UpgradeType.MoreOptions:
                 // Apply more upgrade options
                 upgradeOptionsBonus += (int)upgrade.value;
                 upgradeOptionsBonus = Mathf.Min(upgradeOptionsBonus, maxUpgradesToShow - baseUpgradesToShow);
-                Debug.Log($"Applied more options upgrade: +{upgrade.value} (Total bonus: {upgradeOptionsBonus})");
                 break;
                 
             default:
@@ -264,27 +273,17 @@ public class UpgradeManager : MonoBehaviour
 
     public void OnUpgradeButtonPressed(UpgradeChest chest = null)
     {
-        string chestId = chest != null ? chest.GetInstanceID().ToString() : "null";
-        Debug.Log($"[CHEST DEBUG] OnUpgradeButtonPressed called by chest {chestId}");
-        Debug.Log(_activeUpgradeInstance == null ? "Instantiate new UpgradePanel" : "Open active UpgradePanel");
-        
         // Store reference to the chest that opened this menu
         _currentChest = chest;
         
         // Only create a new settings panel if one isn't already active.
         if (_activeUpgradeInstance == null)
         {
-            Debug.Log("[CHEST DEBUG] Creating new upgrade panel instance");
             _activeUpgradeInstance = Instantiate(upgradePanelPrefab, canvas.transform);
             _buttonContainerInstance = _activeUpgradeInstance.transform.Find("UpgradeButtonContainer").gameObject;
         }
-        else
-        {
-            Debug.Log("[CHEST DEBUG] Reusing existing upgrade panel");
-        }
         
         // Always show new upgrade choices when any chest is opened
-        Debug.Log("[CHEST DEBUG] About to call ShowUpgradeChoices()");
         ShowUpgradeChoices();
     }
     
@@ -298,6 +297,5 @@ public class UpgradeManager : MonoBehaviour
     public void ResetUpgradeOptionsBonus()
     {
         upgradeOptionsBonus = 0;
-        Debug.Log("Upgrade options bonus reset to 0");
     }
 }

@@ -31,11 +31,6 @@ public class WeaponStation : MonoBehaviour
             {
                 weaponManager = FindObjectOfType<WeaponManager>();
             }
-            Debug.Log($"WeaponStation: WeaponManager found automatically: {(weaponManager != null ? "YES" : "NO")}");
-        }
-        else
-        {
-            Debug.Log("WeaponStation: WeaponManager assigned in inspector");
         }
         
         // Try to find the player
@@ -43,7 +38,6 @@ public class WeaponStation : MonoBehaviour
         if (player != null)
         {
             playerTransform = player.transform;
-            Debug.Log($"WeaponStation: Player found with tag 'Player': {player.name}");
         }
         else
         {
@@ -55,8 +49,6 @@ public class WeaponStation : MonoBehaviour
         {
             stationRenderer.material = normalMaterial;
         }
-        
-        Debug.Log($"WeaponStation initialized. Interaction range: {interactionRange}, Can interact: {canInteract}");
     }
     
     void Update()
@@ -79,9 +71,6 @@ public class WeaponStation : MonoBehaviour
                     {
                         stationRenderer.material = highlightMaterial;
                     }
-                    
-                    // Show interaction prompt
-                    Debug.Log("WeaponStation: Player in range! Press E to access weapon station");
                 }
             }
             else
@@ -96,8 +85,6 @@ public class WeaponStation : MonoBehaviour
                     {
                         stationRenderer.material = normalMaterial;
                     }
-                    
-                    Debug.Log("WeaponStation: Player left range");
                 }
             }
         }
@@ -105,30 +92,15 @@ public class WeaponStation : MonoBehaviour
         // Check for E key when player is in range
         if (playerInRange && canInteract)
         {
-            // Debug: Check if E key is being pressed
-            if (Input.GetKey(KeyCode.E))
-            {
-                Debug.Log("WeaponStation: E key is being held down");
-            }
-            
             if (Input.GetKeyDown(KeyCode.E))
             {
-                Debug.Log("WeaponStation: E key pressed! Attempting to open weapon selection...");
                 OpenWeaponSelection();
             }
-        }
-        
-        // Debug: Check for any key press to test input system
-        if (Input.anyKeyDown)
-        {
-            Debug.Log($"WeaponStation: Key pressed: {Input.inputString}");
         }
     }
     
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"WeaponStation: Trigger entered by: {other.name} with tag: {other.tag}");
-        
         if (other.CompareTag("Player"))
         {
             playerInRange = true;
@@ -138,15 +110,11 @@ public class WeaponStation : MonoBehaviour
             {
                 stationRenderer.material = highlightMaterial;
             }
-            
-            Debug.Log("WeaponStation: Player entered trigger! Press E to access weapon station");
         }
     }
     
     void OnTriggerExit(Collider other)
     {
-        Debug.Log($"WeaponStation: Trigger exited by: {other.name} with tag: {other.tag}");
-        
         if (other.CompareTag("Player"))
         {
             playerInRange = false;
@@ -156,19 +124,14 @@ public class WeaponStation : MonoBehaviour
             {
                 stationRenderer.material = normalMaterial;
             }
-            
-            Debug.Log("WeaponStation: Player exited trigger");
         }
     }
     
     void OpenWeaponSelection()
     {
-        Debug.Log($"WeaponStation: OpenWeaponSelection called. WeaponManager null? {(weaponManager == null ? "YES" : "NO")}");
-        
         if (weaponManager != null)
         {
             weaponManager.ShowWeaponSelection(this);
-            Debug.Log("WeaponStation: Weapon station opened successfully!");
         }
         else
         {
@@ -178,7 +141,6 @@ public class WeaponStation : MonoBehaviour
             weaponManager = FindObjectOfType<WeaponManager>();
             if (weaponManager != null)
             {
-                Debug.Log("WeaponStation: Found WeaponManager automatically, trying again...");
                 weaponManager.ShowWeaponSelection(this);
             }
             else
@@ -199,7 +161,6 @@ public class WeaponStation : MonoBehaviour
     [ContextMenu("Test Open Weapon Selection")]
     public void TestOpenWeaponSelection()
     {
-        Debug.Log("WeaponStation: Testing weapon selection manually...");
         OpenWeaponSelection();
     }
 }

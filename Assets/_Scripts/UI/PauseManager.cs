@@ -88,7 +88,7 @@ public class PauseManager : MonoBehaviour
 
     public void OnSettingsButtonPressed()
     {
-        Debug.Log(_activeSettingsInstance == null ? "Instantiate new SettingsPanel" : "Open active SettingsPanel");
+        // Create or reuse settings panel
         // Only create a new settings panel if one isn't already active.
         if (_activeSettingsInstance == null)
         {

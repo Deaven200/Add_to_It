@@ -16,7 +16,7 @@ public class TeleportToHub : MonoBehaviour
             timer += Time.deltaTime;
             if (timer >= timeToTeleport)
             {
-                Debug.Log("Teleporting to Hub...");
+                // Teleport to Hub
                 SceneManager.LoadScene(hubSceneName); // or "Hub" directly
             }
         }

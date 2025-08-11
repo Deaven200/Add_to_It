@@ -17,7 +17,7 @@ public class LevelExit : MonoBehaviour
         // Check if the object that entered has the "Player" tag.
         if (other.CompareTag("Player"))
         {
-            Debug.Log("Player has reached the exit!");
+            // Player has reached the exit
             levelCompleteUI.ShowScreen(nextLevelBuildIndex);
 
             // Disable the trigger so it doesn't fire multiple times.

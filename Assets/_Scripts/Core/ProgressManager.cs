@@ -43,7 +43,7 @@ public class ProgressManager : MonoBehaviour
         {
             PlayerPrefs.SetInt(HighestLevelUnlockedKey, levelNumber);
             PlayerPrefs.Save(); // Immediately writes data to disk
-            Debug.Log($"New highest level unlocked: {levelNumber}");
+            // New highest level unlocked
         }
     }
 

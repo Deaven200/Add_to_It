@@ -21,8 +21,6 @@ public class WeaponSetupHelper : MonoBehaviour
     [ContextMenu("Setup Weapon System")]
     public void SetupWeaponSystem()
     {
-        Debug.Log("WeaponSetupHelper: Setting up weapon system...");
-        
         // Find WeaponManager
         WeaponManager weaponManager = WeaponManager.Instance;
         if (weaponManager == null)
@@ -36,23 +34,16 @@ public class WeaponSetupHelper : MonoBehaviour
             return;
         }
         
-        Debug.Log("WeaponSetupHelper: Found WeaponManager");
-        
         if (addAllWeaponsOnStart)
         {
             AddAllWeaponsToManager(weaponManager);
         }
-        
-        Debug.Log("WeaponSetupHelper: Weapon system setup complete!");
     }
     
     public void AddAllWeaponsToManager(WeaponManager weaponManager)
     {
-        Debug.Log("WeaponSetupHelper: Adding all weapons to manager...");
-        
         // Find all weapon data assets
         WeaponData[] allWeaponData = Resources.FindObjectsOfTypeAll<WeaponData>();
-        Debug.Log($"WeaponSetupHelper: Found {allWeaponData.Length} weapon data assets");
         
         if (allWeaponData.Length == 0)
         {
@@ -64,10 +55,7 @@ public class WeaponSetupHelper : MonoBehaviour
         foreach (WeaponData weapon in allWeaponData)
         {
             weaponManager.AddWeapon(weapon);
-            Debug.Log($"WeaponSetupHelper: Added weapon: {weapon.weaponName}");
         }
-        
-        Debug.Log($"WeaponSetupHelper: Added {allWeaponData.Length} weapons to WeaponManager");
     }
     
     [ContextMenu("Add All Weapons")]
@@ -88,8 +76,6 @@ public class WeaponSetupHelper : MonoBehaviour
     [ContextMenu("Check Weapon System Status")]
     public void CheckWeaponSystemStatus()
     {
-        Debug.Log("=== Weapon System Status Check ===");
-        
         // Check WeaponManager
         WeaponManager weaponManager = WeaponManager.Instance;
         if (weaponManager == null)
@@ -102,15 +88,12 @@ public class WeaponSetupHelper : MonoBehaviour
             Debug.LogError("❌ No WeaponManager found in scene!");
             return;
         }
-        Debug.Log("✅ WeaponManager found");
         
         // Check available weapons
         int weaponCount = weaponManager.GetAvailableWeapons().Count;
-        Debug.Log($"📊 Available weapons: {weaponCount}");
         
         // Check weapon data assets
         WeaponData[] allWeaponData = Resources.FindObjectsOfTypeAll<WeaponData>();
-        Debug.Log($"📦 Weapon data assets found: {allWeaponData.Length}");
         
         // Check UI references
         if (weaponManager.GetComponent<WeaponManager>() != null)
@@ -123,22 +106,17 @@ public class WeaponSetupHelper : MonoBehaviour
             if (weaponSelectionUIField != null)
             {
                 var weaponSelectionUI = weaponSelectionUIField.GetValue(weaponManager);
-                Debug.Log($"🎮 Weapon Selection UI: {(weaponSelectionUI != null ? "✅ Assigned" : "❌ Missing")}");
             }
             
             if (weaponCardPrefabField != null)
             {
                 var weaponCardPrefab = weaponCardPrefabField.GetValue(weaponManager);
-                Debug.Log($"🃏 Weapon Card Prefab: {(weaponCardPrefab != null ? "✅ Assigned" : "❌ Missing")}");
             }
             
             if (weaponCardContainerField != null)
             {
                 var weaponCardContainer = weaponCardContainerField.GetValue(weaponManager);
-                Debug.Log($"📦 Weapon Card Container: {(weaponCardContainer != null ? "✅ Assigned" : "❌ Missing")}");
             }
         }
-        
-        Debug.Log("=== Status Check Complete ===");
     }
 } 
