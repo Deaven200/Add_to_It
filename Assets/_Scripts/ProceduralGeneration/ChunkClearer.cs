@@ -29,10 +29,10 @@ public class ChunkClearer : MonoBehaviour
         PlayerPrefs.Save();
         
         // Find and clear any active chunks
-        ChunkGenerator chunkGenerator = FindObjectOfType<ChunkGenerator>();
-        if (chunkGenerator != null)
+        ProceduralLevelManager levelManager = FindObjectOfType<ProceduralLevelManager>();
+        if (levelManager != null)
         {
-            chunkGenerator.StartNewGame();
+            levelManager.StartNewGame();
         }
         
         Debug.Log("All chunks cleared! Restart the game to see the new chunk size.");

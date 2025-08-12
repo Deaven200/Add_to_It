@@ -20,10 +20,10 @@ public class QuickSetup : MonoBehaviour
         }
         
         // Create chunk generator
-        GameObject chunkGeneratorGO = new GameObject("ChunkGenerator");
-        ChunkGenerator chunkGenerator = chunkGeneratorGO.AddComponent<ChunkGenerator>();
+        GameObject levelManagerGO = new GameObject("ProceduralLevelManager");
+        ProceduralLevelManager levelManager = levelManagerGO.AddComponent<ProceduralLevelManager>();
         
-        Debug.Log("Created chunk generator");
+        Debug.Log("Created level manager");
         
         // Set up camera
         Camera mainCamera = Camera.main;

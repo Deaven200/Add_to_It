@@ -8,13 +8,13 @@ public class ChunkPersistenceUI : MonoBehaviour
     [SerializeField] private Button clearChunksButton;
     [SerializeField] private Text statusText;
     
-    private ChunkGenerator chunkGenerator;
+    private ProceduralLevelManager levelManager;
     private ChunkPersistenceManager persistenceManager;
     
     void Start()
     {
-        // Find the chunk generator
-        chunkGenerator = FindObjectOfType<ChunkGenerator>();
+        // Find the level manager
+        levelManager = FindObjectOfType<ProceduralLevelManager>();
         persistenceManager = FindObjectOfType<ChunkPersistenceManager>();
         
         // Set up button listeners
@@ -39,14 +39,14 @@ public class ChunkPersistenceUI : MonoBehaviour
     
     public void StartNewGame()
     {
-        if (chunkGenerator != null)
+        if (levelManager != null)
         {
-            chunkGenerator.StartNewGame();
+            levelManager.StartNewGame();
             Debug.Log("New game started via UI");
         }
         else
         {
-            Debug.LogWarning("ChunkGenerator not found!");
+            Debug.LogWarning("ProceduralLevelManager not found!");
         }
     }
     
@@ -75,11 +75,9 @@ public class ChunkPersistenceUI : MonoBehaviour
                 savedChunks = persistenceManager.GetSavedChunkCount();
             }
             
-            if (chunkGenerator != null)
+            if (levelManager != null)
             {
-                // We can't directly access the active chunks count, so we'll estimate
-                // based on render distance
-                activeChunks = 9; // 3x3 render distance = 9 chunks
+                activeChunks = levelManager.ActiveChunkCount;
             }
             
             statusText.text = $"Saved Chunks: {savedChunks}\nActive Chunks: ~{activeChunks}";

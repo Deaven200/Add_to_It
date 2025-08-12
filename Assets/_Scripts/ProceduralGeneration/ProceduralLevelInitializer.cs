@@ -18,17 +18,17 @@ public class ProceduralLevelInitializer : MonoBehaviour
     
     void InitializeLevel()
     {
-        // Create ChunkGenerator
-        GameObject chunkGeneratorGO = new GameObject("ChunkGenerator");
-        ChunkGenerator chunkGenerator = chunkGeneratorGO.AddComponent<ChunkGenerator>();
+        // Create ProceduralLevelManager
+        GameObject levelManagerGO = new GameObject("ProceduralLevelManager");
+        ProceduralLevelManager levelManager = levelManagerGO.AddComponent<ProceduralLevelManager>();
         
-        // Set up chunk generator through reflection since fields are private
-        SetPrivateField(chunkGenerator, "chunkPrefab", chunkPrefab);
-        SetPrivateField(chunkGenerator, "chunkSize", chunkSize);
-        SetPrivateField(chunkGenerator, "renderDistance", renderDistance);
-        SetPrivateField(chunkGenerator, "enableFog", true);
-        SetPrivateField(chunkGenerator, "fogDistance", 50f);
-        SetPrivateField(chunkGenerator, "fogColor", Color.gray);
+        // Set up level manager through reflection since fields are private
+        SetPrivateField(levelManager, "chunkPrefab", chunkPrefab);
+        SetPrivateField(levelManager, "chunkSize", chunkSize);
+        SetPrivateField(levelManager, "renderDistance", renderDistance);
+        SetPrivateField(levelManager, "enableFog", true);
+        SetPrivateField(levelManager, "fogDistance", 50f);
+        SetPrivateField(levelManager, "fogColor", Color.gray);
         
         // Spawn player if not present
         if (GameObject.FindGameObjectWithTag("Player") == null && playerPrefab != null)
@@ -36,14 +36,14 @@ public class ProceduralLevelInitializer : MonoBehaviour
             GameObject player = Instantiate(playerPrefab, playerSpawnPosition, Quaternion.identity);
             player.tag = "Player";
             
-            // Set player reference in chunk generator
-            SetPrivateField(chunkGenerator, "player", player.transform);
+            // Set player reference in level manager
+            SetPrivateField(levelManager, "player", player.transform);
         }
         else if (GameObject.FindGameObjectWithTag("Player") != null)
         {
             // Set existing player reference
             Transform player = GameObject.FindGameObjectWithTag("Player").transform;
-            SetPrivateField(chunkGenerator, "player", player);
+            SetPrivateField(levelManager, "player", player);
         }
         
         // Set up camera

@@ -1,46 +1,64 @@
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
+using System.Threading.Tasks;
 
 public class ProceduralLevelManager : MonoBehaviour
 {
     [Header("Player Setup")]
     [SerializeField] private bool autoSetup = true;
-    [SerializeField] private GameObject playerPrefab; // Assign your player prefab here
+    [SerializeField] private GameObject playerPrefab;
     
     [Header("Chunk Settings")]
-    [Tooltip("Size of each chunk in world units")]
     [SerializeField] private int chunkSize = 10;
-    [Tooltip("How many chunks to load around the player")]
-    [SerializeField] private int renderDistance = 16;
-    [Tooltip("The player transform to track for chunk generation")]
+    [SerializeField] private int renderDistance = 8; // Reduced from 16 to prevent too many chunks
     [SerializeField] private Transform player;
-    [Tooltip("Prefab to use for chunks (leave empty for dynamic generation)")]
     [SerializeField] private GameObject chunkPrefab;
     
+    [Header("Performance Settings")]
+    [SerializeField] private int maxChunksInPool = 50; // Reduced from 100
+    [SerializeField] private bool useAsyncGeneration = true;
+    [SerializeField] private int chunksPerFrame = 1; // Reduced from 2
+    [SerializeField] private float maxGenerationTime = 0.016f; // Max 16ms per frame
+    
+    [Header("Terrain Settings")]
+    [SerializeField] private TerrainSettings terrainSettings;
+    
     [Header("Fog Settings")]
-    [Tooltip("Enable fog to hide ungenerated areas")]
     [SerializeField] private bool enableFog = true;
-    [Tooltip("Distance where fog starts to appear")]
     [SerializeField] private float fogDistance = 50f;
-    [Tooltip("Color of the fog")]
     [SerializeField] private Color fogColor = Color.gray;
     
     [Header("Persistence")]
-    [Tooltip("Enable chunk persistence across game sessions")]
     [SerializeField] private bool enablePersistence = true;
     
     [Header("Debug")]
-    [Tooltip("Show debug information in console")]
-    [SerializeField] private bool showDebugInfo = true;
+    [SerializeField] private bool showDebugInfo = false;
+    [SerializeField] private bool showPerformanceStats = false;
+    [SerializeField] private bool showVerboseLogs = false;
     
-    private Dictionary<Vector2Int, GameObject> activeChunks = new Dictionary<Vector2Int, GameObject>();
+    // Performance tracking
+    private float lastFrameTime;
+    private int totalChunksGenerated;
+    private bool isGenerating = false;
+    private bool isInitialized = false;
+    
+    // Chunk management
+    private Dictionary<Vector2Int, Chunk> activeChunks = new Dictionary<Vector2Int, Chunk>();
+    private Queue<Chunk> chunkPool = new Queue<Chunk>();
+    private HashSet<Vector2Int> chunksToGenerate = new HashSet<Vector2Int>();
     private Vector2Int lastPlayerChunk;
-    private ChunkPersistenceManager persistenceManager;
     
-    // Public properties for easy access
+    // Components
+    private ChunkPersistenceManager persistenceManager;
+    private TerrainGenerator terrainGenerator;
+    
+    // Public properties
     public int ChunkSize => chunkSize;
     public int RenderDistance => renderDistance;
     public bool EnablePersistence => enablePersistence;
+    public int ActiveChunkCount => activeChunks.Count;
+    public int PooledChunkCount => chunkPool.Count;
     
     void Start()
     {
@@ -52,24 +70,61 @@ public class ProceduralLevelManager : MonoBehaviour
     
     void SetupProceduralLevel()
     {
-        // Create player if none exists
-        if (GameObject.FindGameObjectWithTag("Player") == null)
+        try
         {
-            CreatePlayer();
-        }
-        
-        // Find the player
-        if (player == null)
-        {
-            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+            // Create player if none exists
+            if (GameObject.FindGameObjectWithTag("Player") == null)
+            {
+                CreatePlayer();
+            }
+            
+            // Find the player
             if (player == null)
             {
-                Debug.LogError("ProceduralLevelManager: No player found! Make sure the player has the 'Player' tag.");
-                return;
+                player = GameObject.FindGameObjectWithTag("Player")?.transform;
+                if (player == null)
+                {
+                    Debug.LogError("ProceduralLevelManager: No player found! Make sure the player has the 'Player' tag.");
+                    return;
+                }
+            }
+            
+            // Set up fog
+            SetupFog();
+            
+            // Set up terrain generator
+            SetupTerrainGenerator();
+            
+            // Set up persistence manager
+            SetupPersistenceManager();
+            
+            // Initialize chunk pool
+            InitializeChunkPool();
+            
+            // Generate initial chunks around player
+            lastPlayerChunk = GetChunkPosition(player.position);
+            GenerateChunksAroundPlayer();
+            
+            // Wait for initial chunks to be generated
+            StartCoroutine(WaitForInitialGeneration());
+            
+            if (showDebugInfo)
+            {
+                Debug.Log($"ProceduralLevelManager initialized - Chunk Size: {chunkSize}, Render Distance: {renderDistance}");
+            }
+            else
+            {
+                Debug.Log("ProceduralLevelManager initialized successfully");
             }
         }
-        
-        // Set up fog
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error in SetupProceduralLevel: {e.Message}");
+        }
+    }
+    
+    void SetupFog()
+    {
         if (enableFog)
         {
             RenderSettings.fog = true;
@@ -78,18 +133,58 @@ public class ProceduralLevelManager : MonoBehaviour
             RenderSettings.fogStartDistance = 0f;
             RenderSettings.fogEndDistance = fogDistance;
         }
-        
-        // Set up persistence manager
-        SetupPersistenceManager();
-        
-        // Generate initial chunks around player
-        lastPlayerChunk = GetChunkPosition(player.position);
-        GenerateChunksAroundPlayer();
-        
-        if (showDebugInfo)
+    }
+    
+    void SetupTerrainGenerator()
+    {
+        terrainGenerator = GetComponent<TerrainGenerator>();
+        if (terrainGenerator == null)
         {
-            Debug.Log($"ProceduralLevelManager initialized - Chunk Size: {chunkSize}, Render Distance: {renderDistance}");
+            terrainGenerator = gameObject.AddComponent<TerrainGenerator>();
         }
+        
+        if (terrainSettings == null)
+        {
+            terrainSettings = ScriptableObject.CreateInstance<TerrainSettings>();
+            Debug.LogWarning("No TerrainSettings assigned. Using default settings.");
+        }
+        
+        terrainGenerator.Initialize(terrainSettings, chunkSize);
+    }
+    
+    void SetupPersistenceManager()
+    {
+        if (enablePersistence)
+        {
+            persistenceManager = FindObjectOfType<ChunkPersistenceManager>();
+            if (persistenceManager == null)
+            {
+                GameObject persistenceGO = new GameObject("ChunkPersistenceManager");
+                persistenceManager = persistenceGO.AddComponent<ChunkPersistenceManager>();
+            }
+            
+            persistenceManager.SetChunkManager(this);
+        }
+    }
+    
+    void InitializeChunkPool()
+    {
+        // Pre-populate the chunk pool with a smaller number
+        int initialPoolSize = Mathf.Min(maxChunksInPool / 4, 10);
+        for (int i = 0; i < initialPoolSize; i++)
+        {
+            CreatePooledChunk();
+        }
+    }
+    
+    void CreatePooledChunk()
+    {
+        GameObject chunkGO = new GameObject("PooledChunk");
+        chunkGO.transform.SetParent(transform);
+        chunkGO.SetActive(false);
+        
+        Chunk chunk = chunkGO.AddComponent<Chunk>();
+        chunkPool.Enqueue(chunk);
     }
     
     void CreatePlayer()
@@ -98,7 +193,6 @@ public class ProceduralLevelManager : MonoBehaviour
         
         if (playerPrefab != null)
         {
-            // Use provided player prefab
             playerObject = Instantiate(playerPrefab, new Vector3(0, 2, 0), Quaternion.identity);
         }
         else
@@ -123,31 +217,24 @@ public class ProceduralLevelManager : MonoBehaviour
                 {
                     movement.cameraTransform = mainCamera.transform;
                 }
+                
+                // Disable movement until initialization is complete
+                if (movement != null)
+                {
+                    movement.enabled = false;
+                }
             }
         }
         
         player = playerObject.transform;
     }
     
-    void SetupPersistenceManager()
-    {
-        if (enablePersistence)
-        {
-            // Find or create persistence manager
-            persistenceManager = FindObjectOfType<ChunkPersistenceManager>();
-            if (persistenceManager == null)
-            {
-                GameObject persistenceGO = new GameObject("ChunkPersistenceManager");
-                persistenceManager = persistenceGO.AddComponent<ChunkPersistenceManager>();
-            }
-            
-            persistenceManager.SetChunkManager(this);
-        }
-    }
-    
     void Update()
     {
-        if (player == null) return;
+        if (player == null || !isInitialized) return;
+        
+        // Performance tracking
+        lastFrameTime = Time.deltaTime;
         
         Vector2Int currentPlayerChunk = GetChunkPosition(player.position);
         
@@ -156,6 +243,64 @@ public class ProceduralLevelManager : MonoBehaviour
         {
             lastPlayerChunk = currentPlayerChunk;
             GenerateChunksAroundPlayer();
+        }
+        
+        // Process chunk generation queue with time limit
+        if (useAsyncGeneration && !isGenerating)
+        {
+            ProcessChunkGenerationQueue();
+        }
+        
+        // Update performance stats
+        if (showPerformanceStats && Time.frameCount % 60 == 0)
+        {
+            LogPerformanceStats();
+        }
+    }
+    
+    void ProcessChunkGenerationQueue()
+    {
+        if (chunksToGenerate.Count == 0) return;
+        
+        isGenerating = true;
+        float startTime = Time.realtimeSinceStartup;
+        int chunksProcessed = 0;
+        
+        try
+        {
+            while (chunksToGenerate.Count > 0 && 
+                   chunksProcessed < chunksPerFrame && 
+                   (Time.realtimeSinceStartup - startTime) < maxGenerationTime)
+            {
+                // Get the first chunk position from the set
+                Vector2Int chunkPos = new Vector2Int();
+                bool foundChunk = false;
+                
+                foreach (var pos in chunksToGenerate)
+                {
+                    chunkPos = pos;
+                    foundChunk = true;
+                    break;
+                }
+                
+                if (!foundChunk) break;
+                
+                chunksToGenerate.Remove(chunkPos);
+                
+                if (!activeChunks.ContainsKey(chunkPos))
+                {
+                    CreateChunk(chunkPos);
+                    chunksProcessed++;
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error in ProcessChunkGenerationQueue: {e.Message}");
+        }
+        finally
+        {
+            isGenerating = false;
         }
     }
     
@@ -168,175 +313,338 @@ public class ProceduralLevelManager : MonoBehaviour
     
     void GenerateChunksAroundPlayer()
     {
-        Vector2Int playerChunk = GetChunkPosition(player.position);
-        HashSet<Vector2Int> chunksToKeep = new HashSet<Vector2Int>();
+        if (isGenerating) return; // Prevent recursive calls
         
-        // Generate chunks in render distance
-        for (int x = -renderDistance; x <= renderDistance; x++)
+        try
         {
-            for (int z = -renderDistance; z <= renderDistance; z++)
+            Vector2Int playerChunk = GetChunkPosition(player.position);
+            HashSet<Vector2Int> chunksToKeep = new HashSet<Vector2Int>();
+            
+            // Generate chunks in render distance (reduced range for performance)
+            int actualRenderDistance = Mathf.Min(renderDistance, 8); // Cap at 8 for safety
+            
+            for (int x = -actualRenderDistance; x <= actualRenderDistance; x++)
             {
-                Vector2Int chunkPos = new Vector2Int(
-                    playerChunk.x + x,
-                    playerChunk.y + z
-                );
-                
-                chunksToKeep.Add(chunkPos);
-                
-                if (!activeChunks.ContainsKey(chunkPos))
+                for (int z = -actualRenderDistance; z <= actualRenderDistance; z++)
                 {
-                    CreateChunk(chunkPos);
+                    Vector2Int chunkPos = new Vector2Int(
+                        playerChunk.x + x,
+                        playerChunk.y + z
+                    );
+                    
+                    chunksToKeep.Add(chunkPos);
+                    
+                    if (!activeChunks.ContainsKey(chunkPos))
+                    {
+                        if (useAsyncGeneration)
+                        {
+                            chunksToGenerate.Add(chunkPos);
+                        }
+                        else
+                        {
+                            CreateChunk(chunkPos);
+                        }
+                    }
                 }
             }
-        }
-        
-        // Remove chunks outside render distance
-        List<Vector2Int> chunksToRemove = new List<Vector2Int>();
-        foreach (var chunk in activeChunks.Keys)
-        {
-            if (!chunksToKeep.Contains(chunk))
+            
+            // Remove chunks outside render distance
+            List<Vector2Int> chunksToRemove = new List<Vector2Int>();
+            foreach (var chunk in activeChunks.Keys)
             {
-                chunksToRemove.Add(chunk);
+                if (!chunksToKeep.Contains(chunk))
+                {
+                    chunksToRemove.Add(chunk);
+                }
+            }
+            
+            foreach (var chunkPos in chunksToRemove)
+            {
+                RemoveChunk(chunkPos);
             }
         }
-        
-        foreach (var chunkPos in chunksToRemove)
+        catch (System.Exception e)
         {
-            RemoveChunk(chunkPos);
+            Debug.LogError($"Error in GenerateChunksAroundPlayer: {e.Message}");
         }
     }
     
     void CreateChunk(Vector2Int chunkPos, bool wasPreviouslySaved = false)
     {
-        Vector3 worldPos = new Vector3(chunkPos.x * chunkSize, -0.5f, chunkPos.y * chunkSize);
-        GameObject chunk;
-        
-        // Always create chunk dynamically for now (more reliable)
-        chunk = new GameObject($"Chunk_{chunkPos.x}_{chunkPos.y}");
-        chunk.transform.SetParent(transform);
-        chunk.transform.position = worldPos;
-        
-        // Add visual representation
-        GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        visual.transform.SetParent(chunk.transform);
-        visual.transform.localPosition = Vector3.zero;
-        visual.transform.localScale = new Vector3(chunkSize, 1, chunkSize);
-        
-        // Set material to make it visible
-        Renderer renderer = visual.GetComponent<Renderer>();
-        if (renderer != null)
+        try
         {
-            // Create a simple material if none exists
-            Material material = new Material(Shader.Find("Standard"));
-            material.color = new Color(0.5f, 0.5f, 0.5f, 1f); // Gray color
-            renderer.material = material;
+            Vector3 worldPos = new Vector3(chunkPos.x * chunkSize, 0, chunkPos.y * chunkSize);
+            Chunk chunk;
+            
+            // Get chunk from pool or create new one
+            if (chunkPool.Count > 0)
+            {
+                chunk = chunkPool.Dequeue();
+                chunk.gameObject.SetActive(true);
+                chunk.transform.position = worldPos;
+            }
+            else
+            {
+                GameObject chunkGO = new GameObject($"Chunk_{chunkPos.x}_{chunkPos.y}");
+                chunkGO.transform.SetParent(transform);
+                chunkGO.transform.position = worldPos;
+                chunk = chunkGO.AddComponent<Chunk>();
+            }
+            
+            // Initialize chunk with terrain generation
+            chunk.Initialize(chunkPos, chunkSize, terrainGenerator);
+            
+            activeChunks.Add(chunkPos, chunk);
+            totalChunksGenerated++;
+            
+            // Save chunk data if persistence is enabled
+            if (enablePersistence && persistenceManager != null)
+            {
+                persistenceManager.SaveChunk(chunkPos, worldPos, true);
+            }
+            
+            if (showDebugInfo && wasPreviouslySaved)
+            {
+                Debug.Log($"Restored previously saved chunk at {chunkPos}");
+            }
         }
-        
-        // Use the visual's collider instead of creating a separate one
-        // This ensures the collider matches the visual exactly
-        BoxCollider visualCollider = visual.GetComponent<BoxCollider>();
-        if (visualCollider != null)
+        catch (System.Exception e)
         {
-            // Make sure the collider is properly sized
-            visualCollider.size = new Vector3(chunkSize, 1, chunkSize);
-            visualCollider.center = Vector3.zero;
-        }
-        
-        // Add chunk component if it doesn't exist
-        Chunk chunkComponent = chunk.GetComponent<Chunk>();
-        if (chunkComponent == null)
-        {
-            chunkComponent = chunk.AddComponent<Chunk>();
-        }
-        chunkComponent.Initialize(chunkPos, chunkSize);
-        
-        activeChunks.Add(chunkPos, chunk);
-        
-        // Save chunk data if persistence is enabled
-        if (enablePersistence && persistenceManager != null)
-        {
-            persistenceManager.SaveChunk(chunkPos, worldPos, true);
-        }
-        
-        // Only log if this was a previously saved chunk (less spam)
-        if (showDebugInfo && wasPreviouslySaved)
-        {
-            Debug.Log($"Restored previously saved chunk at {chunkPos}");
+            Debug.LogError($"Error creating chunk at {chunkPos}: {e.Message}");
         }
     }
     
     void RemoveChunk(Vector2Int chunkPos)
     {
-        if (activeChunks.TryGetValue(chunkPos, out GameObject chunk))
+        try
         {
-            // Save chunk data before destroying (for persistence)
-            if (enablePersistence && persistenceManager != null)
+            if (activeChunks.TryGetValue(chunkPos, out Chunk chunk))
             {
-                persistenceManager.SaveChunk(chunkPos, chunk.transform.position, true);
+                // Save chunk data before destroying (for persistence)
+                if (enablePersistence && persistenceManager != null)
+                {
+                    persistenceManager.SaveChunk(chunkPos, chunk.transform.position, true);
+                }
+                
+                // Return to pool instead of destroying
+                if (chunkPool.Count < maxChunksInPool)
+                {
+                    chunk.gameObject.SetActive(false);
+                    chunkPool.Enqueue(chunk);
+                }
+                else
+                {
+                    Destroy(chunk.gameObject);
+                }
+                
+                activeChunks.Remove(chunkPos);
             }
-            
-            Destroy(chunk);
-            activeChunks.Remove(chunkPos);
         }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error removing chunk at {chunkPos}: {e.Message}");
+        }
+    }
+    
+    void LogPerformanceStats()
+    {
+        Debug.Log($"Performance Stats - FPS: {1f/lastFrameTime:F1}, Active Chunks: {activeChunks.Count}, " +
+                  $"Pooled Chunks: {chunkPool.Count}, Total Generated: {totalChunksGenerated}, " +
+                  $"Chunks in Queue: {chunksToGenerate.Count}");
     }
     
     public void StartNewGame()
     {
-        if (persistenceManager != null)
+        try
         {
-            persistenceManager.StartNewGame();
-        }
-        
-        // Clear all active chunks
-        foreach (var chunk in activeChunks.Values)
-        {
-            if (chunk != null)
+            if (persistenceManager != null)
             {
-                Destroy(chunk);
+                persistenceManager.StartNewGame();
+            }
+            
+            // Clear all active chunks
+            foreach (var chunk in activeChunks.Values)
+            {
+                if (chunk != null)
+                {
+                    if (chunkPool.Count < maxChunksInPool)
+                    {
+                        chunk.gameObject.SetActive(false);
+                        chunkPool.Enqueue(chunk);
+                    }
+                    else
+                    {
+                        Destroy(chunk.gameObject);
+                    }
+                }
+            }
+            activeChunks.Clear();
+            chunksToGenerate.Clear();
+            
+            // Generate initial chunks
+            if (player != null)
+            {
+                lastPlayerChunk = GetChunkPosition(player.position);
+                GenerateChunksAroundPlayer();
             }
         }
-        activeChunks.Clear();
-        
-        // Regenerate chunks around current player position
-        if (player != null)
+        catch (System.Exception e)
         {
-            lastPlayerChunk = GetChunkPosition(player.position);
-            GenerateChunksAroundPlayer();
+            Debug.LogError($"Error in StartNewGame: {e.Message}");
+        }
+    }
+    
+    public Chunk GetChunkAt(Vector2Int position)
+    {
+        activeChunks.TryGetValue(position, out Chunk chunk);
+        return chunk;
+    }
+    
+    System.Collections.IEnumerator WaitForInitialGeneration()
+    {
+        if (showVerboseLogs)
+        {
+            Debug.Log("Waiting for initial chunk generation...");
         }
         
-        Debug.Log("Started new game - all chunks cleared and regenerated");
+        // Wait a few frames to allow initial chunks to be queued
+        yield return new WaitForSeconds(0.1f);
+        
+        // Process chunks until we have enough around the player
+        int maxWaitFrames = 60; // Wait up to 1 second at 60fps
+        int framesWaited = 0;
+        
+        while (chunksToGenerate.Count > 0 && framesWaited < maxWaitFrames)
+        {
+            // Process all chunks in the queue
+            ProcessChunkGenerationQueue();
+            
+            // Wait a frame
+            yield return null;
+            framesWaited++;
+        }
+        
+        // Ensure player is on solid ground
+        EnsurePlayerOnGround();
+        
+        isInitialized = true;
+        
+        // Enable player movement
+        EnablePlayerMovement();
+        
+        if (showDebugInfo)
+        {
+            Debug.Log($"Initialization complete! Active chunks: {activeChunks.Count}, Pooled chunks: {chunkPool.Count}");
+        }
+        else
+        {
+            Debug.Log("World ready! Player can now move.");
+        }
     }
     
-    // Public method to get active chunk count
-    public int GetActiveChunkCount()
+    void EnsurePlayerOnGround()
     {
-        return activeChunks.Count;
+        if (player == null) return;
+        
+        // Check if player is on a chunk
+        Vector2Int playerChunk = GetChunkPosition(player.position);
+        Chunk playerChunkObj = GetChunkAt(playerChunk);
+        
+        if (playerChunkObj == null)
+        {
+            Debug.LogWarning($"Player not on a chunk! Creating emergency chunk at {playerChunk}");
+            CreateChunk(playerChunk);
+        }
+        
+        // Move player slightly up to ensure they're on the ground
+        Vector3 playerPos = player.position;
+        playerPos.y = Mathf.Max(playerPos.y, 1f); // Ensure player is at least 1 unit above ground
+        player.position = playerPos;
+        
+        if (showVerboseLogs)
+        {
+            Debug.Log($"Player positioned at {player.position}");
+        }
     }
     
-    // Public method to get all active chunk positions
-    public List<Vector2Int> GetActiveChunkPositions()
+    void EnablePlayerMovement()
     {
-        return new List<Vector2Int>(activeChunks.Keys);
+        if (player == null) return;
+        
+        // Enable player movement script
+        PlayerMovement movement = player.GetComponent<PlayerMovement>();
+        if (movement != null)
+        {
+            movement.enabled = true;
+            if (showVerboseLogs)
+            {
+                Debug.Log("Player movement enabled");
+            }
+        }
+        
+        // Enable player rigidbody if it was disabled
+        Rigidbody rb = player.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+        }
     }
     
     void OnDrawGizmosSelected()
     {
+        if (!showDebugInfo) return;
+        
+        // Draw chunk boundaries
+        Gizmos.color = Color.yellow;
+        foreach (var chunk in activeChunks.Values)
+        {
+            if (chunk != null)
+            {
+                Vector3 center = chunk.transform.position + new Vector3(chunkSize * 0.5f, 0, chunkSize * 0.5f);
+                Gizmos.DrawWireCube(center, new Vector3(chunkSize, 1, chunkSize));
+            }
+        }
+        
+        // Draw player position
         if (player != null)
         {
-            Vector2Int playerChunk = GetChunkPosition(player.position);
-            Vector3 chunkCenter = new Vector3(
-                playerChunk.x * chunkSize + chunkSize / 2f,
-                0,
-                playerChunk.y * chunkSize + chunkSize / 2f
-            );
-            
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireCube(chunkCenter, new Vector3(chunkSize, 1, chunkSize));
-            
-            // Draw render distance
-            Gizmos.color = Color.green;
-            float renderSize = renderDistance * chunkSize;
-            Gizmos.DrawWireCube(chunkCenter, new Vector3(renderSize * 2, 1, renderSize * 2));
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(player.position, 0.5f);
+        }
+    }
+    
+    /// <summary>
+    /// Sets the player reference for the procedural level manager.
+    /// Called by PlayerSpawnManager when spawning a player.
+    /// </summary>
+    /// <param name="playerObject">The player GameObject to track</param>
+    public void SetPlayer(GameObject playerObject)
+    {
+        if (playerObject == null)
+        {
+            Debug.LogError("ProceduralLevelManager: Cannot set null player!");
+            return;
+        }
+        
+        player = playerObject.transform;
+        
+        // Disable player movement until initialization is complete
+        var playerMovement = playerObject.GetComponent<PlayerMovement>();
+        if (playerMovement != null)
+        {
+            playerMovement.enabled = false;
+        }
+        
+        // Disable camera controller until initialization is complete
+        var cameraController = playerObject.GetComponent<CameraController>();
+        if (cameraController != null)
+        {
+            cameraController.enabled = false;
+        }
+        
+        if (showDebugInfo)
+        {
+            Debug.Log($"Player set to: {playerObject.name}");
         }
     }
 }

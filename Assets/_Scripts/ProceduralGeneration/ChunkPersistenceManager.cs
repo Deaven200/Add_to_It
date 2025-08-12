@@ -8,7 +8,7 @@ public class ChunkPersistenceManager : MonoBehaviour
     [SerializeField] private bool enablePersistence = true;
     [SerializeField] private string saveKey = "ChunkData";
     
-    private MonoBehaviour chunkManager; // Can be either ChunkGenerator or ProceduralLevelManager
+    private MonoBehaviour chunkManager; // Can be ProceduralLevelManager
     private Dictionary<Vector2Int, ChunkData> savedChunks = new Dictionary<Vector2Int, ChunkData>();
     
     [System.Serializable]
@@ -50,10 +50,7 @@ public class ChunkPersistenceManager : MonoBehaviour
         }
     }
     
-    public void SetChunkGenerator(ChunkGenerator generator)
-    {
-        chunkManager = generator;
-    }
+
     
     public void SetChunkManager(ProceduralLevelManager manager)
     {

@@ -18,22 +18,22 @@ public class ProceduralLevelSetup : MonoBehaviour
     
     void SetupLevel()
     {
-        // Find or create ChunkGenerator
-        ChunkGenerator chunkGenerator = FindObjectOfType<ChunkGenerator>();
-        if (chunkGenerator == null)
+        // Find or create ProceduralLevelManager
+        ProceduralLevelManager levelManager = FindObjectOfType<ProceduralLevelManager>();
+        if (levelManager == null)
         {
-            GameObject generatorGO = new GameObject("ChunkGenerator");
-            chunkGenerator = generatorGO.AddComponent<ChunkGenerator>();
+            GameObject managerGO = new GameObject("ProceduralLevelManager");
+            levelManager = managerGO.AddComponent<ProceduralLevelManager>();
         }
         
-        // Set up chunk generator parameters
-        var chunkGeneratorComponent = chunkGenerator.GetComponent<ChunkGenerator>();
-        if (chunkGeneratorComponent != null)
+        // Set up level manager parameters
+        var levelManagerComponent = levelManager.GetComponent<ProceduralLevelManager>();
+        if (levelManagerComponent != null)
         {
             // We'll set these through reflection since they're private
-            SetPrivateField(chunkGeneratorComponent, "chunkPrefab", chunkPrefab);
-            SetPrivateField(chunkGeneratorComponent, "chunkSize", chunkSize);
-            SetPrivateField(chunkGeneratorComponent, "renderDistance", renderDistance);
+            SetPrivateField(levelManagerComponent, "chunkPrefab", chunkPrefab);
+            SetPrivateField(levelManagerComponent, "chunkSize", chunkSize);
+            SetPrivateField(levelManagerComponent, "renderDistance", renderDistance);
         }
         
         // Spawn player if not already present

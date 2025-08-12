@@ -23,4 +23,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Prefabs/_Scenes/Scenes/SampleScene.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/_Prefabs/_Scenes/Scenes/Main_level.unity
+    guid: 5d0831c0a7d06bd4aac2e5480f534a19
   m_configObjects: {}

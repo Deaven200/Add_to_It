@@ -23,7 +23,7 @@ public class SimpleProceduralSetup : MonoBehaviour
         }
         
         // Create chunk generator
-        CreateChunkGenerator();
+        CreateLevelManager();
         
         // Set up camera
         SetupCamera();
@@ -66,27 +66,27 @@ public class SimpleProceduralSetup : MonoBehaviour
         }
     }
     
-    void CreateChunkGenerator()
+    void CreateLevelManager()
     {
-        // Create chunk generator GameObject
-        GameObject chunkGeneratorGO = new GameObject("ChunkGenerator");
-        ChunkGenerator chunkGenerator = chunkGeneratorGO.AddComponent<ChunkGenerator>();
+        // Create level manager GameObject
+        GameObject levelManagerGO = new GameObject("ProceduralLevelManager");
+        ProceduralLevelManager levelManager = levelManagerGO.AddComponent<ProceduralLevelManager>();
         
-        // Set up the chunk generator through reflection
-        SetPrivateField(chunkGenerator, "chunkSize", 16);
-        SetPrivateField(chunkGenerator, "renderDistance", 3);
-        SetPrivateField(chunkGenerator, "enableFog", true);
-        SetPrivateField(chunkGenerator, "fogDistance", 50f);
-        SetPrivateField(chunkGenerator, "fogColor", Color.gray);
+        // Set up the level manager through reflection
+        SetPrivateField(levelManager, "chunkSize", 16);
+        SetPrivateField(levelManager, "renderDistance", 3);
+        SetPrivateField(levelManager, "enableFog", true);
+        SetPrivateField(levelManager, "fogDistance", 50f);
+        SetPrivateField(levelManager, "fogColor", Color.gray);
         
         // Set player reference
         Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (player != null)
         {
-            SetPrivateField(chunkGenerator, "player", player);
+            SetPrivateField(levelManager, "player", player);
         }
         
-        Debug.Log("Created chunk generator");
+        Debug.Log("Created level manager");
     }
     
     void SetupCamera()
