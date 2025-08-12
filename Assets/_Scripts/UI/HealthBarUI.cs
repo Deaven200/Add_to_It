@@ -1,28 +1,17 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Health-specific wrapper for the BarUI component.
+/// Handles health-specific logic and connects to PlayerHealth component.
+/// </summary>
 public class HealthBarUI : MonoBehaviour
 {
-    [Header("Health Bar Components")]
-    [SerializeField] private Slider healthSlider;
-    [SerializeField] private Image fillImage;
-    [SerializeField] private TextMeshProUGUI healthText;
-    [SerializeField] private Image backgroundImage;
-    
-    [Header("Health Bar Settings")]
-    [SerializeField] private Color fullHealthColor = Color.green;
-    [SerializeField] private Color lowHealthColor = Color.red;
-    [SerializeField] private Color mediumHealthColor = Color.yellow;
-    [SerializeField] private float lowHealthThreshold = 0.3f; // 30% health
-    [SerializeField] private float mediumHealthThreshold = 0.6f; // 60% health
-    
-    [Header("Animation Settings")]
-    [SerializeField] private bool animateHealthBar = true;
-    [SerializeField] private float animationSpeed = 5f;
+    [Header("Health Bar")]
+    [SerializeField] private BarUI healthBar;
+    [SerializeField] private TextMeshProUGUI healthText; // Optional additional text display
     
     private PlayerHealth playerHealth;
-    private float targetHealthValue;
     
     void Start()
     {
@@ -42,44 +31,34 @@ public class HealthBarUI : MonoBehaviour
         InitializeHealthBar();
     }
     
-    void Update()
-    {
-        // Animate the health bar if enabled
-        if (animateHealthBar && healthSlider != null)
-        {
-            healthSlider.value = Mathf.Lerp(healthSlider.value, targetHealthValue, Time.deltaTime * animationSpeed);
-        }
-    }
-    
     void InitializeHealthBar()
     {
-        if (healthSlider != null)
+        if (healthBar != null && playerHealth != null)
         {
-            healthSlider.minValue = 0;
-            healthSlider.maxValue = playerHealth.maxHealth;
-            healthSlider.value = playerHealth.currentHealth;
-            targetHealthValue = playerHealth.currentHealth;
+            // Set initial values
+            healthBar.SetValue(playerHealth.currentHealth, playerHealth.maxHealth);
+            
+            // Subscribe to bar value changes for additional text updates
+            healthBar.OnValueChanged += OnHealthBarValueChanged;
         }
         
         UpdateHealthText();
-        UpdateHealthBarColor();
     }
     
     public void UpdateHealthBar(int currentHealth, int maxHealth)
     {
-        if (healthSlider != null)
+        if (healthBar != null)
         {
-            targetHealthValue = currentHealth;
-            
-            // If animation is disabled, update immediately
-            if (!animateHealthBar)
-            {
-                healthSlider.value = currentHealth;
-            }
+            healthBar.SetValue(currentHealth, maxHealth);
         }
         
         UpdateHealthText();
-        UpdateHealthBarColor();
+    }
+    
+    private void OnHealthBarValueChanged(int current, int max)
+    {
+        // This is called when the bar value changes (useful for additional UI updates)
+        UpdateHealthText();
     }
     
     void UpdateHealthText()
@@ -87,26 +66,11 @@ public class HealthBarUI : MonoBehaviour
         if (healthText != null && playerHealth != null)
         {
             healthText.text = $"{playerHealth.currentHealth} / {playerHealth.maxHealth}";
+            Debug.Log($"HealthBarUI: Updated text to '{healthText.text}'");
         }
-    }
-    
-    void UpdateHealthBarColor()
-    {
-        if (fillImage == null || playerHealth == null) return;
-        
-        float healthPercentage = (float)playerHealth.currentHealth / playerHealth.maxHealth;
-        
-        if (healthPercentage <= lowHealthThreshold)
+        else if (healthText == null)
         {
-            fillImage.color = lowHealthColor;
-        }
-        else if (healthPercentage <= mediumHealthThreshold)
-        {
-            fillImage.color = mediumHealthColor;
-        }
-        else
-        {
-            fillImage.color = fullHealthColor;
+            Debug.LogWarning("HealthBarUI: healthText is null - make sure to assign a TextMeshProUGUI component in the inspector");
         }
     }
     
@@ -116,6 +80,11 @@ public class HealthBarUI : MonoBehaviour
         if (playerHealth != null)
         {
             playerHealth.OnHealthChanged -= UpdateHealthBar;
+        }
+        
+        if (healthBar != null)
+        {
+            healthBar.OnValueChanged -= OnHealthBarValueChanged;
         }
     }
 } 
