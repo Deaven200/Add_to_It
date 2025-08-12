@@ -99,7 +99,7 @@ Transform:
   m_GameObject: {fileID: 5974432704305552662}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -3, z: -22}
+  m_LocalPosition: {x: 0, y: 1, z: -22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -314,7 +314,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   availableWeapons:
   - {fileID: 11400000, guid: a10670605c584df449522ac1902d3652, type: 2}
-  currentWeapon: {fileID: 0}
+  currentPlayerWeapon:
+    baseWeapon: {fileID: 0}
+    damage: 0
+    fireRate: 0
+    bulletSpeed: 0
+    maxAmmo: 0
+    reloadTime: 0
+    hasExplosion: 0
+    explosionRadius: 0
+    hasPiercing: 0
+    pierceCount: 0
+    damageModifier: 0
+    fireRateModifier: 0
+    bulletSpeedModifier: 0
+    ammoModifier: 0
+    reloadTimeModifier: 0
   weaponHolder: {fileID: 1637073090570381920}
   spawnPoint: {fileID: 7426419479482541592}
   weaponSelectionUI: {fileID: 0}

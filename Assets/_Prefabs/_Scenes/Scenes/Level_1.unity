@@ -521,63 +521,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 247285152}
   m_CullTransparentMesh: 1
---- !u!1001 &253820651
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -2.7098958
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -5.03
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -1.0308266
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5058105363414093012, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_Name
-      value: UpgradeChest
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 796d8558564972e4d97000e640f58793, type: 3}
 --- !u!1 &268640565
 GameObject:
   m_ObjectHideFlags: 0
@@ -3735,7 +3678,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17aded629c4dd464190e96f40d2930f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rarityWeights: []
+  rarityWeights:
+  - rarity: 0
+    weight: 100
+  - rarity: 1
+    weight: 90
+  - rarity: 2
+    weight: 80
+  - rarity: 3
+    weight: 70
+  - rarity: 4
+    weight: 60
+  - rarity: 5
+    weight: 50
+  - rarity: 6
+    weight: 35
+  - rarity: 7
+    weight: 25
+  - rarity: 8
+    weight: 10
   upgradeTypeConfigs:
   - upgradeType: 0
     baseName: Damage Boost
@@ -4748,63 +4709,6 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
---- !u!1001 &1661629341
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 3.3755581
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -5.0299997
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -3.5073833
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5058105363414093012, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_Name
-      value: UpgradeChest (1)
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 796d8558564972e4d97000e640f58793, type: 3}
 --- !u!1 &1694450817
 GameObject:
   m_ObjectHideFlags: 0
@@ -5046,63 +4950,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1777922984}
   m_CullTransparentMesh: 1
---- !u!1001 &1894725230
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 9.450003
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -5.0299997
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -9.113527
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3765022584015658103, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5058105363414093012, guid: 796d8558564972e4d97000e640f58793, type: 3}
-      propertyPath: m_Name
-      value: UpgradeChest (2)
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 796d8558564972e4d97000e640f58793, type: 3}
 --- !u!1 &2111120849
 GameObject:
   m_ObjectHideFlags: 0
@@ -5408,7 +5255,4 @@ SceneRoots:
   - {fileID: 1462564680}
   - {fileID: 1091897577}
   - {fileID: 1460176049}
-  - {fileID: 253820651}
-  - {fileID: 1661629341}
-  - {fileID: 1894725230}
   - {fileID: 649001600}
