@@ -28,6 +28,7 @@ public class UpgradeData : ScriptableObject
         ChestDropRate,
         Shield,
         Health,
+        Armor,
         MoreOptions, // New upgrade type for more upgrade options
         BulletSpeed, // New weapon upgrade type
         AmmoCapacity, // New weapon upgrade type

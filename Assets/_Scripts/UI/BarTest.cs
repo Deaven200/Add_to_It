@@ -35,14 +35,21 @@ public class BarTest : MonoBehaviour
         
         if (Input.GetKeyDown(KeyCode.J))
         {
-            // Take damage
-            if (healthBar != null)
+            // Take damage through proper damage handler (shield priority)
+            PlayerDamageHandler damageHandler = FindObjectOfType<PlayerDamageHandler>();
+            if (damageHandler != null)
             {
+                damageHandler.TakeDamage(damageAmount);
+                Debug.Log($"Took {damageAmount} damage through damage handler (shield priority)");
+            }
+            else
+            {
+                // Fallback to direct health damage if no damage handler
                 PlayerHealth playerHealth = FindObjectOfType<PlayerHealth>();
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(damageAmount);
-                    Debug.Log($"Took {damageAmount} damage. Current: {playerHealth.currentHealth}/{playerHealth.maxHealth}");
+                    Debug.Log($"Took {damageAmount} damage directly to health (no damage handler found)");
                 }
             }
         }
@@ -258,8 +265,42 @@ public class BarTest : MonoBehaviour
             }
         }
         
-        // Stamina bar tests
+        // Shield tests
         if (Input.GetKeyDown(KeyCode.U))
+        {
+            // Take shield damage directly
+            PlayerShield playerShield = FindObjectOfType<PlayerShield>();
+            if (playerShield != null)
+            {
+                playerShield.TakeShieldDamage(damageAmount);
+                Debug.Log($"Took {damageAmount} shield damage directly. Current: {playerShield.currentShield}/{playerShield.maxShield}");
+            }
+        }
+        
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            // Regenerate shield
+            PlayerShield playerShield = FindObjectOfType<PlayerShield>();
+            if (playerShield != null)
+            {
+                playerShield.RegenerateShield(healAmount);
+                Debug.Log($"Regenerated {healAmount} shield. Current: {playerShield.currentShield}/{playerShield.maxShield}");
+            }
+        }
+        
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            // Restore full shield
+            PlayerShield playerShield = FindObjectOfType<PlayerShield>();
+            if (playerShield != null)
+            {
+                playerShield.RestoreFullShield();
+                Debug.Log($"Restored full shield. Current: {playerShield.currentShield}/{playerShield.maxShield}");
+            }
+        }
+        
+        // Stamina bar tests (moved to different keys)
+        if (Input.GetKeyDown(KeyCode.LeftBracket))
         {
             // Drain stamina
             if (staminaBar != null)
@@ -269,7 +310,7 @@ public class BarTest : MonoBehaviour
             }
         }
         
-        if (Input.GetKeyDown(KeyCode.I))
+        if (Input.GetKeyDown(KeyCode.RightBracket))
         {
             // Regenerate stamina
             if (staminaBar != null)
@@ -279,7 +320,7 @@ public class BarTest : MonoBehaviour
             }
         }
         
-        if (Input.GetKeyDown(KeyCode.O))
+        if (Input.GetKeyDown(KeyCode.Backslash))
         {
             // Restore full stamina
             if (staminaBar != null)
@@ -330,10 +371,11 @@ public class BarTest : MonoBehaviour
     void OnGUI()
     {
         // Display test instructions
-        GUILayout.BeginArea(new Rect(10, 10, 400, 600));
+        GUILayout.BeginArea(new Rect(10, 10, 400, 700));
         GUILayout.Label("Bar Test Controls:", GUI.skin.box);
+        GUILayout.Label("=== HEALTH TESTS ===");
         GUILayout.Label("H - Heal");
-        GUILayout.Label("J - Take Damage");
+        GUILayout.Label("J - Take Damage (Shield Priority)");
         GUILayout.Label("K - Set Health to 50");
         GUILayout.Label("L - Restore Full Health");
         GUILayout.Label("Y - Increase Max Health (+50)");
@@ -341,9 +383,15 @@ public class BarTest : MonoBehaviour
         GUILayout.Label("1-6 - Set health to 50,100,150,200,300,400");
         GUILayout.Label("7-9 - Set health to 500,1000,2000");
         GUILayout.Label("0 - Set health to 5000");
-        GUILayout.Label("U - Drain Stamina");
-        GUILayout.Label("I - Regenerate Stamina");
-        GUILayout.Label("O - Restore Full Stamina");
+        GUILayout.Label("=== SHIELD TESTS ===");
+        GUILayout.Label("U - Take Shield Damage Directly");
+        GUILayout.Label("I - Regenerate Shield");
+        GUILayout.Label("O - Restore Full Shield");
+        GUILayout.Label("=== STAMINA TESTS ===");
+        GUILayout.Label("[ - Drain Stamina");
+        GUILayout.Label("] - Regenerate Stamina");
+        GUILayout.Label("\\ - Restore Full Stamina");
+        GUILayout.Label("=== INFO ===");
         GUILayout.Label("Space - Print Values");
         GUILayout.Label("P - Print Scaling Info");
         GUILayout.EndArea();

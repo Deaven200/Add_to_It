@@ -203,11 +203,30 @@ public class UpgradeManager : MonoBehaviour
                 break;
                 
             case UpgradeData.UpgradeType.Shield:
-                // Apply shield to player
-                PlayerHealth playerHealthShield = player.GetComponent<PlayerHealth>();
-                if (playerHealthShield != null)
+                // Apply shield upgrade to player shield
+                PlayerShield playerShield = player.GetComponent<PlayerShield>();
+                if (playerShield != null)
                 {
-                    // You'll need to add shield functionality to PlayerHealth
+                    playerShield.SetMaxShield(playerShield.maxShield + (int)upgrade.value);
+                    playerShield.RegenerateShield((int)upgrade.value);
+                }
+                else
+                {
+                    Debug.LogError("PlayerShield component not found! Cannot apply shield upgrade.");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.Armor:
+                // Apply armor upgrade to player armor
+                PlayerArmor playerArmor = player.GetComponent<PlayerArmor>();
+                if (playerArmor != null)
+                {
+                    playerArmor.SetMaxArmor(playerArmor.GetMaxArmor() + (int)upgrade.value);
+                    playerArmor.AddArmor((int)upgrade.value);
+                }
+                else
+                {
+                    Debug.LogError("PlayerArmor component not found! Cannot apply armor upgrade.");
                 }
                 break;
                 

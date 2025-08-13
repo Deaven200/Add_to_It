@@ -65,10 +65,10 @@ public class RandomUpgradeGenerator : MonoBehaviour
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Health, baseName = "Health Boost", descriptionTemplate = "Increases maximum health by {0}", minValue = 5f, maxValue = 45f },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.FireRate, baseName = "Fire Rate", descriptionTemplate = "Increases fire rate by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoveSpeed, baseName = "Speed Boost", descriptionTemplate = "Increases movement speed by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.DamageResistance, baseName = "Armor", descriptionTemplate = "Reduces damage taken by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.LifeOnKill, baseName = "Life Steal", descriptionTemplate = "Heals {0} health on kill", minValue = 1f, maxValue = 9f },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.CoinMagnetRange, baseName = "Coin Magnet", descriptionTemplate = "Increases coin pickup range by {0}%", minValue = 10f, maxValue = 90f, isPercentage = true },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Shield, baseName = "Shield", descriptionTemplate = "Grants {0} shield points", minValue = 10f, maxValue = 90f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Shield, baseName = "Shield", descriptionTemplate = "Grants {0} shield points", minValue = 5f, maxValue = 25f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Armor, baseName = "Armor", descriptionTemplate = "Grants {0} armor points", minValue = 2f, maxValue = 15f },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ChestDropRate, baseName = "Lucky Find", descriptionTemplate = "Increases chest drop rate by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ExplosionOnKill, baseName = "Explosive Kill", descriptionTemplate = "Creates explosion on kill with {0} radius", minValue = 1f, maxValue = 9f },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoreOptions, baseName = "Choice Expansion", descriptionTemplate = "Increases upgrade choices by {0}", minValue = 1f, maxValue = 3f }
@@ -107,6 +107,7 @@ public class RandomUpgradeGenerator : MonoBehaviour
             UpgradeData.UpgradeType.LifeOnKill,
             UpgradeData.UpgradeType.CoinMagnetRange,
             UpgradeData.UpgradeType.Shield,
+            UpgradeData.UpgradeType.Armor,
             UpgradeData.UpgradeType.ChestDropRate,
             UpgradeData.UpgradeType.ExplosionOnKill,
             UpgradeData.UpgradeType.MoreOptions

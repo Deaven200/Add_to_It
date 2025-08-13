@@ -28,6 +28,8 @@ public class UIManager : MonoBehaviour
     
     [Header("Money UI")]
     [SerializeField] private TextMeshProUGUI moneyText;
+    [SerializeField] private string currencyName = "Money";
+    [SerializeField] private string moneyDisplayFormat = "{0}: {1}"; // {0} = currency name, {1} = amount
     
     [Header("Scene Management")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
@@ -242,6 +244,18 @@ public class UIManager : MonoBehaviour
     public int GetMaxPlayerHealth() => maxPlayerHealth;
     public int GetPlayerMoney() => currentPlayerMoney;
     
+    public void SetCurrencyName(string name)
+    {
+        currencyName = name;
+        UpdateMoneyUI();
+    }
+    
+    public void SetMoneyDisplayFormat(string format)
+    {
+        moneyDisplayFormat = format;
+        UpdateMoneyUI();
+    }
+    
     private void UpdateHealthUI()
     {
         if (healthSlider != null)
@@ -279,7 +293,7 @@ public class UIManager : MonoBehaviour
     {
         if (moneyText != null)
         {
-            moneyText.text = $"Money: {currentPlayerMoney}";
+            moneyText.text = string.Format(moneyDisplayFormat, currencyName, currentPlayerMoney);
         }
     }
     

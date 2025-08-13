@@ -494,7 +494,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 1
-  speed: 1
+  speed: 0.3
   damage: 1
   increaseInterval: 10
 --- !u!4 &1294317409
@@ -609,7 +609,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8be79024dd1004d4ea00e581dd7b0c1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  upgradeGenerator: {fileID: 0}
+  upgradeGenerator: {fileID: 1372246977}
   baseUpgradesToShow: 3
   maxUpgradesToShow: 9
   upgradePanelPrefab: {fileID: 6168845045667551694, guid: c098424dcb1a5c040b6fe237a9e51258, type: 3}

@@ -30,14 +30,28 @@ public class EnemyDamage : MonoBehaviour
         
         if (canDamage && !isDamaging)
         {
-            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
+            // Use PlayerDamageHandler for proper shield priority
+            PlayerDamageHandler damageHandler = player.GetComponent<PlayerDamageHandler>();
+            if (damageHandler != null)
             {
                 isDamaging = true;
-                playerHealth.TakeDamage(damageAmount);
+                damageHandler.TakeDamage(damageAmount);
                 lastDamageTime = Time.time;
                 
-                // Damage applied successfully
+                // Damage applied successfully through damage handler
+            }
+            else
+            {
+                // Fallback to direct health damage if no damage handler
+                PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+                if (playerHealth != null)
+                {
+                    isDamaging = true;
+                    playerHealth.TakeDamage(damageAmount);
+                    lastDamageTime = Time.time;
+                    
+                    // Damage applied directly to health (no damage handler found)
+                }
             }
         }
         else if (distance > damageRange && isDamaging)
