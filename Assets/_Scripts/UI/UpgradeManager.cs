@@ -115,7 +115,12 @@ public class UpgradeManager : MonoBehaviour
             return;
         }
         
-
+        // Track the upgrade
+        PlayerUpgradeTracker upgradeTracker = player.GetComponent<PlayerUpgradeTracker>();
+        if (upgradeTracker != null)
+        {
+            upgradeTracker.AddUpgrade(upgrade.upgradeType, upgrade.value, upgrade.rarity);
+        }
         
         switch (upgrade.upgradeType)
         {

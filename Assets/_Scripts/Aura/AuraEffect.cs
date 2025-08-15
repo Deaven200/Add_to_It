@@ -78,7 +78,7 @@ public class AuraEffect : MonoBehaviour
         auraCollider = gameObject.AddComponent<CapsuleCollider>();
         auraCollider.radius = radius;
         auraCollider.height = radius * 2f;
-        auraCollider.isTrigger = true;
+        auraCollider.isTrigger = true; // Default to trigger for most auras
         auraCollider.direction = 1; // Y-axis
         
         // Set layer mask for collision detection (use Default layer if Aura layer doesn't exist)
@@ -91,6 +91,15 @@ public class AuraEffect : MonoBehaviour
         {
             gameObject.layer = 0; // Default layer
             Debug.LogWarning("AuraEffect: 'Aura' layer not found, using Default layer instead.");
+        }
+    }
+    
+    // Method to make collider physical (for shield aura)
+    public void MakeColliderPhysical()
+    {
+        if (auraCollider != null)
+        {
+            auraCollider.isTrigger = false;
         }
     }
     
@@ -165,17 +174,10 @@ public class AuraEffect : MonoBehaviour
     
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"AuraEffect: OnTriggerEnter with {other.name} (Layer: {other.gameObject.layer}, Target Layer Mask: {targetLayerMask})");
-        
         // Check if the collider is on the target layer
         if (((1 << other.gameObject.layer) & targetLayerMask) != 0)
         {
-            Debug.Log($"AuraEffect: Layer check passed for {other.name}, invoking OnAuraTriggerEnter");
             OnAuraTriggerEnter?.Invoke(other);
-        }
-        else
-        {
-            Debug.Log($"AuraEffect: Layer check failed for {other.name} (Layer {other.gameObject.layer} not in mask {targetLayerMask})");
         }
     }
     

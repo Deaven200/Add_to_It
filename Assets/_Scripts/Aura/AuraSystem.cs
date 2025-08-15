@@ -137,33 +137,25 @@ public class AuraSystem : MonoBehaviour
         auraEffect.Initialize(UpgradeData.UpgradeType.CoinMagnetAura, radius, coinLayerMask);
         auraEffect.SetMaterial(coinMagnetMaterial);
         
-        // Add debug logging for trigger events
+        // Handle coin attraction when coins enter the aura
         auraEffect.OnAuraTriggerEnter += (collider) => {
-            Debug.Log($"CoinMagnetAura: TriggerEnter with {collider.name} (Tag: {collider.tag}, Layer: {collider.gameObject.layer})");
-            
             if (collider.CompareTag("Money"))
             {
-                Debug.Log($"CoinMagnetAura: Money detected! Moving coin {collider.name} towards player");
-                // Move coin towards player
-                Rigidbody coinRb = collider.GetComponent<Rigidbody>();
-                if (coinRb != null)
-                {
-                    Vector3 direction = (transform.position - collider.transform.position).normalized;
-                    coinRb.AddForce(direction * 10f, ForceMode.Force);
-                    Debug.Log($"CoinMagnetAura: Applied force to {collider.name}");
-                }
-                else
-                {
-                    Debug.LogWarning($"CoinMagnetAura: No Rigidbody found on {collider.name}");
-                }
-            }
-            else
-            {
-                Debug.Log($"CoinMagnetAura: Object {collider.name} doesn't have 'Money' tag (has '{collider.tag}' instead)");
+                // Start moving coin towards player using transform
+                StartCoroutine(MoveCoinTowardsPlayer(collider.gameObject));
             }
         };
         
-        Debug.Log($"CoinMagnetAura: Configured with radius {radius}, layer mask: {coinLayerMask}");
+        // Also add continuous attraction while coins are in the aura
+        auraEffect.OnAuraTriggerStay += (collider) => {
+            if (collider.CompareTag("Money"))
+            {
+                // Apply continuous gentle force while in aura
+                Vector3 direction = (transform.position - collider.transform.position).normalized;
+                collider.transform.position += direction * 2f * Time.deltaTime; // Slower continuous movement
+            }
+        };
+        
     }
     
     private void ConfigureSlowAura(AuraEffect auraEffect, float radius)
@@ -198,7 +190,46 @@ public class AuraSystem : MonoBehaviour
     {
         auraEffect.Initialize(UpgradeData.UpgradeType.ShieldAura, radius, enemyLayerMask);
         auraEffect.SetMaterial(shieldAuraMaterial);
-        // Shield aura provides passive protection - no trigger events needed
+        
+        // Make shield aura physical so enemies can't pass through
+        auraEffect.MakeColliderPhysical();
+        
+        // Shield aura blocks enemies from passing through
+        auraEffect.OnAuraTriggerEnter += (collider) => {
+            if (collider.CompareTag("Enemy"))
+            {
+                // Push enemy back from the shield
+                Vector3 pushDirection = (collider.transform.position - transform.position).normalized;
+                collider.transform.position += pushDirection * 2f;
+                
+                // If enemy has a NavMeshAgent, stop it temporarily
+                UnityEngine.AI.NavMeshAgent agent = collider.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                if (agent != null)
+                {
+                    agent.isStopped = true;
+                    StartCoroutine(ResumeEnemyMovement(agent, 0.5f));
+                }
+            }
+        };
+        
+        // Shield aura absorbs damage when enemies attack
+        auraEffect.OnAuraTriggerStay += (collider) => {
+            if (collider.CompareTag("Enemy"))
+            {
+                // Check if enemy is attacking (you can modify this based on your enemy attack system)
+                EnemyAttack enemyAttack = collider.GetComponent<EnemyAttack>();
+                if (enemyAttack != null && enemyAttack.IsAttacking())
+                {
+                    // Absorb the damage and reduce shield
+                    float damageToAbsorb = enemyAttack.GetAttackDamage();
+                    AbsorbDamage(damageToAbsorb);
+                    
+                    // Optionally push the enemy back
+                    Vector3 pushDirection = (collider.transform.position - transform.position).normalized;
+                    collider.transform.position += pushDirection * 1f;
+                }
+            }
+        };
     }
     
     private void ConfigureDamageAura(AuraEffect auraEffect, float radius)
@@ -251,5 +282,67 @@ public class AuraSystem : MonoBehaviour
         AddAura(UpgradeData.UpgradeType.ShieldAura, 5f, UpgradeData.Rarity.Common);
         AddAura(UpgradeData.UpgradeType.DamageAura, 5f, UpgradeData.Rarity.Common);
         AddAura(UpgradeData.UpgradeType.HealAura, 5f, UpgradeData.Rarity.Common);
+    }
+    
+    // Coroutine to move coins towards player
+    private System.Collections.IEnumerator MoveCoinTowardsPlayer(GameObject coin)
+    {
+        float moveSpeed = 5f; // Adjust this value to control attraction speed
+        float minDistance = 1f; // Stop moving when this close to player
+        
+        while (coin != null && Vector3.Distance(coin.transform.position, transform.position) > minDistance)
+        {
+            if (coin == null) yield break; // Coin was destroyed
+            
+            Vector3 direction = (transform.position - coin.transform.position).normalized;
+            coin.transform.position += direction * moveSpeed * Time.deltaTime;
+            
+            yield return null; // Wait for next frame
+        }
+    }
+    
+    // Coroutine to resume enemy movement after being blocked by shield
+    private System.Collections.IEnumerator ResumeEnemyMovement(UnityEngine.AI.NavMeshAgent agent, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (agent != null)
+        {
+            agent.isStopped = false;
+        }
+    }
+    
+    // Shield damage absorption system
+    private float currentShieldHealth = 100f;
+    private float maxShieldHealth = 100f;
+    
+    private void AbsorbDamage(float damage)
+    {
+        if (currentShieldHealth > 0)
+        {
+            currentShieldHealth -= damage;
+            
+            // If shield is depleted, remove the shield aura
+            if (currentShieldHealth <= 0)
+            {
+                currentShieldHealth = 0;
+                RemoveAura(UpgradeData.UpgradeType.ShieldAura);
+                Debug.Log("Shield Aura depleted and removed!");
+            }
+            else
+            {
+                Debug.Log($"Shield absorbed {damage} damage. Shield health: {currentShieldHealth}/{maxShieldHealth}");
+            }
+        }
+    }
+    
+    // Public methods for shield management
+    public float GetShieldHealth() => currentShieldHealth;
+    public float GetMaxShieldHealth() => maxShieldHealth;
+    public float GetShieldHealthPercentage() => currentShieldHealth / maxShieldHealth;
+    
+    // Method to restore shield health (can be called by healing items or abilities)
+    public void RestoreShieldHealth(float amount)
+    {
+        currentShieldHealth = Mathf.Min(currentShieldHealth + amount, maxShieldHealth);
     }
 }
