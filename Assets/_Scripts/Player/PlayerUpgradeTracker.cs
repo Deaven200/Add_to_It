@@ -30,7 +30,7 @@ public class UpgradeEntry
         {
             case UpgradeData.UpgradeType.Health:
                 return "Health";
-            case UpgradeData.UpgradeType.Speed:
+            case UpgradeData.UpgradeType.MoveSpeed:
                 return "Speed";
             case UpgradeData.UpgradeType.Damage:
                 return "Damage";
@@ -58,7 +58,7 @@ public class UpgradeEntry
             case UpgradeData.UpgradeType.Health:
             case UpgradeData.UpgradeType.Damage:
                 return $"+{totalValue:F0}";
-            case UpgradeData.UpgradeType.Speed:
+            case UpgradeData.UpgradeType.MoveSpeed:
             case UpgradeData.UpgradeType.FireRate:
                 return $"+{totalValue:F1}";
             case UpgradeData.UpgradeType.CoinMagnetAura:
@@ -77,14 +77,7 @@ public class UpgradeEntry
         string displayName = GetDisplayName();
         string formattedValue = GetFormattedValue();
         
-        if (count > 1)
-        {
-            return $"{displayName} {formattedValue} ({count}x)";
-        }
-        else
-        {
-            return $"{displayName} {formattedValue}";
-        }
+        return $"{displayName} {formattedValue}";
     }
     
     public UpgradeData.Rarity GetHighestRarity()

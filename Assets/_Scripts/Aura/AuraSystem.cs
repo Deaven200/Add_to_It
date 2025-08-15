@@ -191,8 +191,8 @@ public class AuraSystem : MonoBehaviour
         auraEffect.Initialize(UpgradeData.UpgradeType.ShieldAura, radius, enemyLayerMask);
         auraEffect.SetMaterial(shieldAuraMaterial);
         
-        // Make shield aura physical so enemies can't pass through
-        auraEffect.MakeColliderPhysical();
+        // Keep shield aura as trigger but use custom enemy blocking logic
+        // This allows bullets and coins to pass through while blocking enemies
         
         // Shield aura blocks enemies from passing through
         auraEffect.OnAuraTriggerEnter += (collider) => {

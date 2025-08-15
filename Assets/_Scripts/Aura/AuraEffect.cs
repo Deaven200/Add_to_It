@@ -174,28 +174,61 @@ public class AuraEffect : MonoBehaviour
     
     void OnTriggerEnter(Collider other)
     {
-        // Check if the collider is on the target layer
-        if (((1 << other.gameObject.layer) & targetLayerMask) != 0)
+        // For coin magnet aura, check by tag instead of layer
+        if (auraType == UpgradeData.UpgradeType.CoinMagnetAura)
         {
-            OnAuraTriggerEnter?.Invoke(other);
+            if (other.CompareTag("Money"))
+            {
+                OnAuraTriggerEnter?.Invoke(other);
+            }
+        }
+        else
+        {
+            // Check if the collider is on the target layer
+            if (((1 << other.gameObject.layer) & targetLayerMask) != 0)
+            {
+                OnAuraTriggerEnter?.Invoke(other);
+            }
         }
     }
     
     void OnTriggerExit(Collider other)
     {
-        // Check if the collider is on the target layer
-        if (((1 << other.gameObject.layer) & targetLayerMask) != 0)
+        // For coin magnet aura, check by tag instead of layer
+        if (auraType == UpgradeData.UpgradeType.CoinMagnetAura)
         {
-            OnAuraTriggerExit?.Invoke(other);
+            if (other.CompareTag("Money"))
+            {
+                OnAuraTriggerExit?.Invoke(other);
+            }
+        }
+        else
+        {
+            // Check if the collider is on the target layer
+            if (((1 << other.gameObject.layer) & targetLayerMask) != 0)
+            {
+                OnAuraTriggerExit?.Invoke(other);
+            }
         }
     }
     
     void OnTriggerStay(Collider other)
     {
-        // Check if the collider is on the target layer
-        if (((1 << other.gameObject.layer) & targetLayerMask) != 0)
+        // For coin magnet aura, check by tag instead of layer
+        if (auraType == UpgradeData.UpgradeType.CoinMagnetAura)
         {
-            OnAuraTriggerStay?.Invoke(other);
+            if (other.CompareTag("Money"))
+            {
+                OnAuraTriggerStay?.Invoke(other);
+            }
+        }
+        else
+        {
+            // Check if the collider is on the target layer
+            if (((1 << other.gameObject.layer) & targetLayerMask) != 0)
+            {
+                OnAuraTriggerStay?.Invoke(other);
+            }
         }
     }
     

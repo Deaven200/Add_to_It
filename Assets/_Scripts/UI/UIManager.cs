@@ -51,11 +51,9 @@ public class UIManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Debug.Log("UIManager: Created persistent instance");
         }
         else
         {
-            Debug.Log("UIManager: Another instance found, destroying this one");
             Destroy(gameObject);
             return;
         }
@@ -69,8 +67,6 @@ public class UIManager : MonoBehaviour
         
         // Load saved player data
         LoadPlayerData();
-        
-        Debug.Log("UIManager: UI panels hidden initially");
     }
     
     // Called when a new scene is loaded
@@ -86,8 +82,6 @@ public class UIManager : MonoBehaviour
     
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"UIManager: Scene loaded: {scene.name}");
-        
         // Re-find UI references in the new scene
         FindUIReferencesInNewScene();
         
@@ -101,86 +95,44 @@ public class UIManager : MonoBehaviour
     
     private void FindUIReferencesInNewScene()
     {
-        Debug.Log("UIManager: Finding UI references in new scene...");
-        
         // Try to find pause menu panel
         if (pauseMenuPanel == null)
         {
             pauseMenuPanel = GameObject.Find("PauseMenuPanel");
-            if (pauseMenuPanel != null)
-            {
-                Debug.Log("UIManager: Found pause menu panel in new scene");
-            }
-            else
-            {
-                Debug.LogWarning("UIManager: Could not find pause menu panel in new scene");
-            }
         }
         
         // Try to find death screen panel
         if (deathScreenPanel == null)
         {
             deathScreenPanel = GameObject.Find("DeathScreenPanel");
-            if (deathScreenPanel != null)
-            {
-                Debug.Log("UIManager: Found death screen panel in new scene");
-            }
-            else
-            {
-                Debug.LogWarning("UIManager: Could not find death screen panel in new scene");
-            }
         }
         
         // Try to find canvas
         if (canvas == null)
         {
             canvas = GameObject.Find("Canvas");
-            if (canvas != null)
-            {
-                Debug.Log("UIManager: Found canvas in new scene");
-            }
-            else
-            {
-                Debug.LogWarning("UIManager: Could not find canvas in new scene");
-            }
         }
         
         // Try to find health bar components
         if (healthSlider == null)
         {
             healthSlider = GameObject.Find("HealthSlider")?.GetComponent<Slider>();
-            if (healthSlider != null)
-            {
-                Debug.Log("UIManager: Found health slider in new scene");
-            }
         }
         
         if (healthFillImage == null)
         {
             healthFillImage = GameObject.Find("HealthFill")?.GetComponent<Image>();
-            if (healthFillImage != null)
-            {
-                Debug.Log("UIManager: Found health fill image in new scene");
-            }
         }
         
         if (healthText == null)
         {
             healthText = GameObject.Find("HealthText")?.GetComponent<TextMeshProUGUI>();
-            if (healthText != null)
-            {
-                Debug.Log("UIManager: Found health text in new scene");
-            }
         }
         
         // Try to find money text
         if (moneyText == null)
         {
             moneyText = GameObject.Find("MoneyText")?.GetComponent<TextMeshProUGUI>();
-            if (moneyText != null)
-            {
-                Debug.Log("UIManager: Found money text in new scene");
-            }
         }
     }
     
@@ -196,8 +148,6 @@ public class UIManager : MonoBehaviour
         
         // Ensure game is running
         Time.timeScale = 1f;
-        
-        Debug.Log("UIManager: UI state reset for new scene");
     }
     
     void Update()
@@ -311,7 +261,6 @@ public class UIManager : MonoBehaviour
         maxPlayerHealth = PlayerPrefs.GetInt("MaxPlayerHealth", 100);
         currentPlayerMoney = PlayerPrefs.GetInt("PlayerMoney", 0);
         
-        Debug.Log($"UIManager: Loaded player data - Health: {currentPlayerHealth}/{maxPlayerHealth}, Money: {currentPlayerMoney}");
     }
     
     [ContextMenu("Reset Player Data")]
@@ -328,8 +277,6 @@ public class UIManager : MonoBehaviour
         
         UpdateHealthUI();
         UpdateMoneyUI();
-        
-        Debug.Log("UIManager: Player data reset");
     }
     
     #endregion
@@ -352,10 +299,15 @@ public class UIManager : MonoBehaviour
             Debug.LogWarning("UIManager: Pause menu panel not found!");
         }
         
+        // Refresh upgrade display if available
+        SimpleUpgradeDisplay upgradeDisplay = FindObjectOfType<SimpleUpgradeDisplay>();
+        if (upgradeDisplay != null)
+        {
+            upgradeDisplay.OnPauseMenuOpen();
+        }
+        
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        
-        Debug.Log("UIManager: Game paused");
     }
     
     public void ResumeGame()
@@ -368,10 +320,15 @@ public class UIManager : MonoBehaviour
             pauseMenuPanel.SetActive(false);
         }
         
+        // Refresh upgrade display if available
+        SimpleUpgradeDisplay upgradeDisplay = FindObjectOfType<SimpleUpgradeDisplay>();
+        if (upgradeDisplay != null)
+        {
+            upgradeDisplay.OnPauseMenuClose();
+        }
+        
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        
-        Debug.Log("UIManager: Game resumed");
     }
     
     public void QuitToMainMenu()
@@ -380,7 +337,6 @@ public class UIManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         
-        Debug.Log($"UIManager: Loading main menu scene: {mainMenuSceneName}");
         SceneManager.LoadScene(mainMenuSceneName);
     }
     
@@ -389,11 +345,6 @@ public class UIManager : MonoBehaviour
         if (_activeSettingsInstance == null && settingsPanelPrefab != null && canvas != null)
         {
             _activeSettingsInstance = Instantiate(settingsPanelPrefab, canvas.transform);
-            Debug.Log("UIManager: Settings panel created");
-        }
-        else
-        {
-            Debug.LogWarning("UIManager: Cannot create settings panel - missing prefab or canvas");
         }
     }
     
@@ -410,36 +361,27 @@ public class UIManager : MonoBehaviour
         {
             deathScreenPanel.SetActive(true);
         }
-        else
-        {
-            Debug.LogWarning("UIManager: Death screen panel not found!");
-        }
         
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        
-        Debug.Log("UIManager: Death screen shown");
     }
     
     public void OnRetryButtonPressed()
     {
         Time.timeScale = 1f;
         string currentScene = SceneManager.GetActiveScene().name;
-        Debug.Log($"UIManager: Reloading current scene: {currentScene}");
         SceneManager.LoadScene(currentScene);
     }
     
     public void OnQuitToMainMenuPressed()
     {
         Time.timeScale = 1f;
-        Debug.Log($"UIManager: Loading main menu scene: {mainMenuSceneName}");
         SceneManager.LoadScene(mainMenuSceneName);
     }
     
     public void OnGoToPlayerRoomPressed()
     {
         Time.timeScale = 1f;
-        Debug.Log($"UIManager: Loading player room scene: {playerRoomSceneName}");
         SceneManager.LoadScene(playerRoomSceneName);
     }
     

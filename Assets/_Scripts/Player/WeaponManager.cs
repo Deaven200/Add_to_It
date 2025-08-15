@@ -39,11 +39,9 @@ public class WeaponManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Debug.Log("WeaponManager: Created persistent instance");
         }
         else
         {
-            Debug.Log("WeaponManager: Another instance found, destroying this one");
             Destroy(gameObject);
             return;
         }
@@ -503,7 +501,6 @@ public class WeaponManager : MonoBehaviour
         currentPlayerWeapon = null;
         currentAmmo = 0;
         
-        Debug.Log("WeaponManager: Player starts with no weapon (saved weapon loading disabled)");
     }
     
     private void LoadAvailableWeapons()
@@ -511,12 +508,10 @@ public class WeaponManager : MonoBehaviour
         // Only load if we don't already have weapons (to avoid duplicates)
         if (availableWeapons.Count > 0)
         {
-            Debug.Log("WeaponManager: Available weapons already loaded, skipping load");
             return;
         }
         
         int weaponCount = PlayerPrefs.GetInt("AvailableWeaponsCount", 0);
-        Debug.Log($"Loading {weaponCount} available weapons from PlayerPrefs");
         
         if (weaponCount > 0)
         {
@@ -535,18 +530,12 @@ public class WeaponManager : MonoBehaviour
                         if (weapon.weaponName == weaponName)
                         {
                             availableWeapons.Add(weapon);
-                            Debug.Log($"Loaded weapon: {weapon.weaponName}");
                             break;
                         }
                     }
                 }
             }
             
-            Debug.Log($"Successfully loaded {availableWeapons.Count} weapons from PlayerPrefs");
-        }
-        else
-        {
-            Debug.Log("No saved weapons found in PlayerPrefs");
         }
     }
     
@@ -566,8 +555,6 @@ public class WeaponManager : MonoBehaviour
         
         OnWeaponChanged?.Invoke(null);
         OnAmmoChanged?.Invoke(0, 0);
-        
-        Debug.Log("Cleared equipped weapon");
     }
     
     // Method to clear all saved weapon data

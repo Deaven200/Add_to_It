@@ -66,7 +66,7 @@ public class HealthBarUI : MonoBehaviour
         if (healthText != null && playerHealth != null)
         {
             healthText.text = $"{playerHealth.currentHealth} / {playerHealth.maxHealth}";
-            Debug.Log($"HealthBarUI: Updated text to '{healthText.text}'");
+    
         }
         else if (healthText == null)
         {

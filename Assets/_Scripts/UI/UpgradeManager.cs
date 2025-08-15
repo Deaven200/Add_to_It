@@ -205,9 +205,7 @@ public class UpgradeManager : MonoBehaviour
                 // Apply life on kill to player
                 break;
                 
-            case UpgradeData.UpgradeType.CoinMagnetRange:
-                // Apply coin magnet range
-                break;
+
                 
             case UpgradeData.UpgradeType.Shield:
                 // Apply shield upgrade to player shield

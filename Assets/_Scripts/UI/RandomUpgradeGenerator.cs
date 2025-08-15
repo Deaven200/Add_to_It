@@ -70,7 +70,7 @@ public class RandomUpgradeGenerator : MonoBehaviour
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.FireRate, baseName = "Fire Rate", descriptionTemplate = "Increases fire rate by {0}%", minValue = 1f, maxValue = 9f, isPercentage = true },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoveSpeed, baseName = "Speed Boost", descriptionTemplate = "Increases movement speed by {0}%", minValue = 1f, maxValue = 9f, isPercentage = true },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.LifeOnKill, baseName = "Life Steal", descriptionTemplate = "Heals {0} health on kill", minValue = 1f, maxValue = 9f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.CoinMagnetRange, baseName = "Coin Magnet", descriptionTemplate = "Increases coin pickup range by {0}%", minValue = 1f, maxValue = 9f, isPercentage = true },
+    
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Shield, baseName = "Shield", descriptionTemplate = "Grants {0} shield points", minValue = 1f, maxValue = 9f },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Armor, baseName = "Armor", descriptionTemplate = "Grants {0} armor points", minValue = 1f, maxValue = 9f },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ChestDropRate, baseName = "Lucky Find", descriptionTemplate = "Increases chest drop rate by {0}%", minValue = 1f, maxValue = 9f, isPercentage = true },
@@ -115,7 +115,7 @@ public class RandomUpgradeGenerator : MonoBehaviour
             UpgradeData.UpgradeType.MoveSpeed,
             UpgradeData.UpgradeType.DamageResistance,
             UpgradeData.UpgradeType.LifeOnKill,
-            UpgradeData.UpgradeType.CoinMagnetRange,
+
             UpgradeData.UpgradeType.Shield,
             UpgradeData.UpgradeType.Armor,
             UpgradeData.UpgradeType.ChestDropRate,

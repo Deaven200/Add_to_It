@@ -40,7 +40,7 @@ public class CameraController : MonoBehaviour
             mainCamera.localPosition = targetCameraPosition;
         }
         
-        Debug.Log($"Camera Controller initialized. Starting in {(isFirstPerson ? "First" : "Third")} Person mode. Press V to switch.");
+
     }
 
     void Update()

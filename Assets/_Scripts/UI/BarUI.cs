@@ -268,7 +268,7 @@ public class BarUI : MonoBehaviour
             valueText.text = newText;
             
             // Debug log to help troubleshoot text issues
-            Debug.Log($"BarUI: Updated text to '{newText}' (Current: {currentValue}, Max: {maxValue})");
+    
         }
         else if (useInternalText && valueText == null)
         {

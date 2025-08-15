@@ -20,7 +20,6 @@ public class UpgradeData : ScriptableObject
     {
         Damage,
         MoveSpeed,
-        CoinMagnetRange,
         DamageResistance,
         LifeOnKill,
         FireRate,

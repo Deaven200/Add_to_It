@@ -13,10 +13,28 @@ public class PauseManager : MonoBehaviour
 
     [SerializeField] private GameObject settingsPanelPrefab;
     [SerializeField] private GameObject canvas;
+    [SerializeField] private SimpleUpgradeDisplay upgradeDisplay;
     private GameObject _activeSettingsInstance;
 
     // Tracks the current paused state of the game.
     private bool isPaused = false;
+    
+    void Start()
+    {
+        // Try to find the upgrade display if not assigned
+        if (upgradeDisplay == null)
+        {
+            upgradeDisplay = FindObjectOfType<SimpleUpgradeDisplay>();
+            if (upgradeDisplay != null)
+            {
+                Debug.Log("PauseManager: Found SimpleUpgradeDisplay automatically");
+            }
+            else
+            {
+                Debug.LogWarning("PauseManager: SimpleUpgradeDisplay not found! Upgrade display won't work.");
+            }
+        }
+    }
 
     // The Update method is called once per frame.
     void Update()
@@ -47,6 +65,17 @@ public class PauseManager : MonoBehaviour
         // Activate the pause menu UI.
         pauseMenuPanel.SetActive(true);
 
+        // Refresh upgrade display if available
+        if (upgradeDisplay != null)
+        {
+            Debug.Log("PauseManager: Calling upgradeDisplay.OnPauseMenuOpen()");
+            upgradeDisplay.OnPauseMenuOpen();
+        }
+        else
+        {
+            Debug.LogWarning("PauseManager: upgradeDisplay is null! Cannot refresh upgrade display.");
+        }
+
         // Unlock the cursor and make it visible so we can click buttons.
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -63,6 +92,13 @@ public class PauseManager : MonoBehaviour
         Time.timeScale = 1f;
         // Deactivate the pause menu UI.
         pauseMenuPanel.SetActive(false);
+
+        // Refresh upgrade display if available
+        if (upgradeDisplay != null)
+        {
+            Debug.Log("PauseManager: Calling upgradeDisplay.OnPauseMenuClose()");
+            upgradeDisplay.OnPauseMenuClose();
+        }
 
         // Re-lock the cursor and hide it for FPS controls.
         Cursor.lockState = CursorLockMode.Locked;

@@ -66,7 +66,7 @@ public class ShieldBarUI : MonoBehaviour
         if (shieldText != null && playerShield != null)
         {
             shieldText.text = $"{playerShield.currentShield} / {playerShield.maxShield}";
-            Debug.Log($"ShieldBarUI: Updated text to '{shieldText.text}'");
+    
         }
         else if (shieldText == null)
         {
