@@ -8,6 +8,11 @@ public class AuraSystem : MonoBehaviour
     [SerializeField] private LayerMask enemyLayerMask = 1; // Default layer for enemies
     [SerializeField] private LayerMask coinLayerMask = 1; // Default layer for coins
     
+    [Header("Visual Positioning")]
+    [SerializeField] private Vector3 visualOffset = Vector3.zero; // Offset for visual effects from player center
+    [SerializeField] private float cylinderHeight = 10f; // Height of the aura cylinder
+    [SerializeField] private bool centerOnPlayer = true; // Whether to center effects on player or use offset
+    
     [Header("Visual Effects")]
     [SerializeField] private Material coinMagnetMaterial;
     [SerializeField] private Material slowAuraMaterial;
@@ -105,23 +110,26 @@ public class AuraSystem : MonoBehaviour
         // Add the AuraEffect component
         AuraEffect auraEffect = auraObject.AddComponent<AuraEffect>();
         
+        // Calculate visual positioning
+        Vector3? visualOffsetParam = centerOnPlayer ? Vector3.zero : visualOffset;
+        
         // Configure the aura based on type
         switch (auraType)
         {
             case UpgradeData.UpgradeType.CoinMagnetAura:
-                ConfigureCoinMagnetAura(auraEffect, radius);
+                ConfigureCoinMagnetAura(auraEffect, radius, visualOffsetParam);
                 break;
             case UpgradeData.UpgradeType.SlowAura:
-                ConfigureSlowAura(auraEffect, radius);
+                ConfigureSlowAura(auraEffect, radius, visualOffsetParam);
                 break;
             case UpgradeData.UpgradeType.ShieldAura:
-                ConfigureShieldAura(auraEffect, radius);
+                ConfigureShieldAura(auraEffect, radius, visualOffsetParam);
                 break;
             case UpgradeData.UpgradeType.DamageAura:
-                ConfigureDamageAura(auraEffect, radius);
+                ConfigureDamageAura(auraEffect, radius, visualOffsetParam);
                 break;
             case UpgradeData.UpgradeType.HealAura:
-                ConfigureHealAura(auraEffect, radius);
+                ConfigureHealAura(auraEffect, radius, visualOffsetParam);
                 break;
             default:
                 Debug.LogWarning($"Unknown aura type: {auraType}");
@@ -132,9 +140,9 @@ public class AuraSystem : MonoBehaviour
         return auraEffect;
     }
     
-    private void ConfigureCoinMagnetAura(AuraEffect auraEffect, float radius)
+    private void ConfigureCoinMagnetAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
     {
-        auraEffect.Initialize(UpgradeData.UpgradeType.CoinMagnetAura, radius, coinLayerMask);
+        auraEffect.Initialize(UpgradeData.UpgradeType.CoinMagnetAura, radius, coinLayerMask, visualOffset, cylinderHeight);
         auraEffect.SetMaterial(coinMagnetMaterial);
         
         // Handle coin attraction when coins enter the aura
@@ -158,9 +166,9 @@ public class AuraSystem : MonoBehaviour
         
     }
     
-    private void ConfigureSlowAura(AuraEffect auraEffect, float radius)
+    private void ConfigureSlowAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
     {
-        auraEffect.Initialize(UpgradeData.UpgradeType.SlowAura, radius, enemyLayerMask);
+        auraEffect.Initialize(UpgradeData.UpgradeType.SlowAura, radius, enemyLayerMask, visualOffset, cylinderHeight);
         auraEffect.SetMaterial(slowAuraMaterial);
         auraEffect.OnAuraTriggerEnter += (collider) => {
             if (collider.CompareTag("Enemy"))
@@ -186,9 +194,9 @@ public class AuraSystem : MonoBehaviour
         };
     }
     
-    private void ConfigureShieldAura(AuraEffect auraEffect, float radius)
+    private void ConfigureShieldAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
     {
-        auraEffect.Initialize(UpgradeData.UpgradeType.ShieldAura, radius, enemyLayerMask);
+        auraEffect.Initialize(UpgradeData.UpgradeType.ShieldAura, radius, enemyLayerMask, visualOffset, cylinderHeight);
         auraEffect.SetMaterial(shieldAuraMaterial);
         
         // Keep shield aura as trigger but use custom enemy blocking logic
@@ -232,9 +240,9 @@ public class AuraSystem : MonoBehaviour
         };
     }
     
-    private void ConfigureDamageAura(AuraEffect auraEffect, float radius)
+    private void ConfigureDamageAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
     {
-        auraEffect.Initialize(UpgradeData.UpgradeType.DamageAura, radius, enemyLayerMask);
+        auraEffect.Initialize(UpgradeData.UpgradeType.DamageAura, radius, enemyLayerMask, visualOffset, cylinderHeight);
         auraEffect.SetMaterial(damageAuraMaterial);
         auraEffect.OnAuraTriggerStay += (collider) => {
             if (collider.CompareTag("Enemy"))
@@ -249,9 +257,9 @@ public class AuraSystem : MonoBehaviour
         };
     }
     
-    private void ConfigureHealAura(AuraEffect auraEffect, float radius)
+    private void ConfigureHealAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
     {
-        auraEffect.Initialize(UpgradeData.UpgradeType.HealAura, radius, LayerMask.GetMask("Player"));
+        auraEffect.Initialize(UpgradeData.UpgradeType.HealAura, radius, LayerMask.GetMask("Player"), visualOffset, cylinderHeight);
         auraEffect.SetMaterial(healAuraMaterial);
         auraEffect.OnAuraTriggerStay += (collider) => {
             if (collider.CompareTag("Player") && playerHealth != null)
@@ -339,6 +347,74 @@ public class AuraSystem : MonoBehaviour
     public float GetShieldHealth() => currentShieldHealth;
     public float GetMaxShieldHealth() => maxShieldHealth;
     public float GetShieldHealthPercentage() => currentShieldHealth / maxShieldHealth;
+    
+    // Public methods for visual positioning
+    public void SetVisualOffset(Vector3 offset)
+    {
+        visualOffset = offset;
+        // Update all existing auras with new positioning
+        foreach (var aura in activeAuras.Values)
+        {
+            if (aura != null)
+            {
+                Vector3? newOffset = centerOnPlayer ? Vector3.zero : visualOffset;
+                LayerMask layerMask = GetLayerMaskForAuraType(aura.GetAuraType());
+                aura.Initialize(aura.GetAuraType(), aura.GetRadius(), layerMask, newOffset, cylinderHeight);
+            }
+        }
+    }
+    
+    public void SetCylinderHeight(float height)
+    {
+        cylinderHeight = height;
+        // Update all existing auras with new height
+        foreach (var aura in activeAuras.Values)
+        {
+            if (aura != null)
+            {
+                Vector3? currentOffset = centerOnPlayer ? Vector3.zero : visualOffset;
+                LayerMask layerMask = GetLayerMaskForAuraType(aura.GetAuraType());
+                aura.Initialize(aura.GetAuraType(), aura.GetRadius(), layerMask, currentOffset, cylinderHeight);
+            }
+        }
+    }
+    
+    public void SetCenterOnPlayer(bool center)
+    {
+        centerOnPlayer = center;
+        // Update all existing auras with new positioning
+        foreach (var aura in activeAuras.Values)
+        {
+            if (aura != null)
+            {
+                Vector3? newOffset = centerOnPlayer ? Vector3.zero : visualOffset;
+                LayerMask layerMask = GetLayerMaskForAuraType(aura.GetAuraType());
+                aura.Initialize(aura.GetAuraType(), aura.GetRadius(), layerMask, newOffset, cylinderHeight);
+            }
+        }
+    }
+    
+    private LayerMask GetLayerMaskForAuraType(UpgradeData.UpgradeType auraType)
+    {
+        switch (auraType)
+        {
+            case UpgradeData.UpgradeType.CoinMagnetAura:
+                return coinLayerMask;
+            case UpgradeData.UpgradeType.SlowAura:
+            case UpgradeData.UpgradeType.ShieldAura:
+            case UpgradeData.UpgradeType.DamageAura:
+                return enemyLayerMask;
+            case UpgradeData.UpgradeType.HealAura:
+                return LayerMask.GetMask("Player");
+            default:
+                return LayerMask.GetMask("Default");
+        }
+    }
+    
+    // Getters for current settings
+    public Vector3 GetVisualOffset() => visualOffset;
+    public float GetCylinderHeight() => cylinderHeight;
+    public bool GetCenterOnPlayer() => centerOnPlayer;
     
     // Method to restore shield health (can be called by healing items or abilities)
     public void RestoreShieldHealth(float amount)

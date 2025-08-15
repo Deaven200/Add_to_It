@@ -192,14 +192,7 @@ public class UpgradeManager : MonoBehaviour
                 }
                 break;
                 
-            case UpgradeData.UpgradeType.DamageResistance:
-                // Apply damage resistance to player health
-                PlayerHealth health = player.GetComponent<PlayerHealth>();
-                if (health != null)
-                {
-                    // You'll need to add damage resistance to PlayerHealth
-                }
-                break;
+
                 
             case UpgradeData.UpgradeType.LifeOnKill:
                 // Apply life on kill to player

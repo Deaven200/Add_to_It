@@ -97,6 +97,11 @@ public class WeaponManager : MonoBehaviour
         {
             SpawnCurrentWeapon();
         }
+        else
+        {
+            // Player starts with no weapon - this is normal
+            Debug.Log("WeaponManager: Player starts with no weapon (saved weapon loading disabled)");
+        }
     }
     
     private void FindUIReferencesInNewScene()
@@ -152,18 +157,35 @@ public class WeaponManager : MonoBehaviour
     
     private void SpawnCurrentWeapon()
     {
-        if (currentPlayerWeapon == null || weaponHolder == null) return;
+        // Early return if no weapon is equipped
+        if (currentPlayerWeapon == null)
+        {
+            return;
+        }
+        
+        // Early return if no weapon holder found
+        if (weaponHolder == null)
+        {
+            Debug.LogWarning("WeaponManager: No weapon holder found, cannot spawn weapon");
+            return;
+        }
         
         // Remove current weapon instance if it exists
         if (currentWeaponInstance != null)
         {
             Destroy(currentWeaponInstance);
+            currentWeaponInstance = null;
         }
         
-        // Spawn new weapon instance
-        if (currentPlayerWeapon.weaponPrefab != null)
+        // Spawn new weapon instance only if prefab exists
+        if (currentPlayerWeapon?.weaponPrefab != null)
         {
             currentWeaponInstance = Instantiate(currentPlayerWeapon.weaponPrefab, weaponHolder);
+        }
+        else
+        {
+            string weaponName = currentPlayerWeapon?.weaponName ?? "Unknown Weapon";
+            Debug.LogWarning($"WeaponManager: No weapon prefab found for {weaponName}");
         }
     }
     
@@ -221,12 +243,20 @@ public class WeaponManager : MonoBehaviour
         OnWeaponChanged?.Invoke(currentPlayerWeapon);
         OnAmmoChanged?.Invoke(currentAmmo, currentPlayerWeapon.maxAmmo);
         
-        Debug.Log($"Equipped weapon: {currentPlayerWeapon.weaponName}");
+        string weaponName = currentPlayerWeapon?.weaponName ?? "Unknown Weapon";
+        Debug.Log($"Equipped weapon: {weaponName}");
     }
     
     public void Shoot()
     {
+        // Early return if no weapon or reloading
         if (currentPlayerWeapon == null || isReloading) 
+        {
+            return;
+        }
+        
+        // Additional safety check - if weapon is null after the first check, return
+        if (currentPlayerWeapon == null)
         {
             return;
         }
@@ -245,8 +275,8 @@ public class WeaponManager : MonoBehaviour
             return;
         }
         
-        // Create bullet
-        if (currentPlayerWeapon.weaponPrefab != null && spawnPoint != null)
+        // Create bullet only if we have required components
+        if (currentPlayerWeapon?.weaponPrefab != null && spawnPoint != null)
         {
             // Get camera direction for accurate shooting
             Camera playerCamera = Camera.main;
@@ -282,11 +312,23 @@ public class WeaponManager : MonoBehaviour
             {
                 audioSource.PlayOneShot(currentPlayerWeapon.shootSound);
             }
-            
+        }
+        else
+        {
+            // Missing required components for shooting
+            if (currentPlayerWeapon?.weaponPrefab == null)
+            {
+                Debug.LogWarning("WeaponManager: Cannot shoot - weapon prefab is null");
+            }
+            if (spawnPoint == null)
+            {
+                Debug.LogWarning("WeaponManager: Cannot shoot - spawn point is null");
+            }
+            return;
         }
         
         // Reduce ammo
-        if (currentPlayerWeapon.maxAmmo > 0)
+        if (currentPlayerWeapon?.maxAmmo > 0)
         {
             currentAmmo--;
             OnAmmoChanged?.Invoke(currentAmmo, currentPlayerWeapon.maxAmmo);
@@ -306,15 +348,24 @@ public class WeaponManager : MonoBehaviour
             audioSource.PlayOneShot(currentPlayerWeapon.reloadSound);
         }
         
-        Debug.Log($"Reloading {currentPlayerWeapon.weaponName}...");
+        string weaponName = currentPlayerWeapon?.weaponName ?? "Unknown Weapon";
+        Debug.Log($"Reloading {weaponName}...");
     }
     
     private void FinishReload()
     {
+        if (currentPlayerWeapon == null)
+        {
+            isReloading = false;
+            return;
+        }
+        
         isReloading = false;
         currentAmmo = currentPlayerWeapon.maxAmmo;
         OnAmmoChanged?.Invoke(currentAmmo, currentPlayerWeapon.maxAmmo);
-        Debug.Log($"Reloaded {currentPlayerWeapon.weaponName}");
+        
+        string weaponName = currentPlayerWeapon.weaponName;
+        Debug.Log($"Reloaded {weaponName}");
     }
     
     public void ShowWeaponSelection(WeaponStation station = null)

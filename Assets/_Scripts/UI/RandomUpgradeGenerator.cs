@@ -113,7 +113,6 @@ public class RandomUpgradeGenerator : MonoBehaviour
             UpgradeData.UpgradeType.Health,
             UpgradeData.UpgradeType.FireRate,
             UpgradeData.UpgradeType.MoveSpeed,
-            UpgradeData.UpgradeType.DamageResistance,
             UpgradeData.UpgradeType.LifeOnKill,
 
             UpgradeData.UpgradeType.Shield,

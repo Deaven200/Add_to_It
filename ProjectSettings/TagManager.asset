@@ -8,6 +8,7 @@ TagManager:
   - Money
   - Bullet
   - Aura
+  - Ground
   layers:
   - Default
   - TransparentFX

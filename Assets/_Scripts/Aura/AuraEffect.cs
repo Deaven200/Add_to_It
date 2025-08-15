@@ -38,7 +38,7 @@ public class AuraEffect : MonoBehaviour
         }
     }
     
-    public void Initialize(UpgradeData.UpgradeType type, float auraRadius, LayerMask layerMask)
+    public void Initialize(UpgradeData.UpgradeType type, float auraRadius, LayerMask layerMask, Vector3? visualOffset = null, float? cylinderHeight = null)
     {
         auraType = type;
         radius = auraRadius;
@@ -50,10 +50,34 @@ public class AuraEffect : MonoBehaviour
             auraCollider.radius = radius;
         }
         
-        // Update visual effect
+        // Update visual effect (cylinder)
         if (auraRenderer != null)
         {
-            auraRenderer.transform.localScale = Vector3.one * (radius * 2f);
+            float height = cylinderHeight ?? 10f;
+            auraRenderer.transform.localScale = new Vector3(radius * 2f, height, radius * 2f);
+            
+            // Apply visual offset if provided
+            if (visualOffset.HasValue)
+            {
+                auraRenderer.transform.localPosition = visualOffset.Value;
+            }
+        }
+        
+        // Update ground ring (recreate mesh for new radius)
+        Transform groundRing = transform.Find("GroundRing");
+        if (groundRing != null)
+        {
+            MeshFilter meshFilter = groundRing.GetComponent<MeshFilter>();
+            if (meshFilter != null)
+            {
+                meshFilter.mesh = CreateHollowRingMesh(radius, 0.2f);
+            }
+            
+            // Apply visual offset to ground ring if provided
+            if (visualOffset.HasValue)
+            {
+                groundRing.localPosition = new Vector3(visualOffset.Value.x, 0f, visualOffset.Value.z);
+            }
         }
     }
     
@@ -68,6 +92,21 @@ public class AuraEffect : MonoBehaviour
             if (auraMaterial.HasProperty("_Color"))
             {
                 originalAlpha = auraMaterial.color.a;
+            }
+            
+            // Also apply material to ground ring with adjusted alpha
+            Transform groundRing = transform.Find("GroundRing");
+            if (groundRing != null)
+            {
+                MeshRenderer ringRenderer = groundRing.GetComponent<MeshRenderer>();
+                if (ringRenderer != null)
+                {
+                    Material ringMaterial = new Material(material);
+                    Color ringColor = ringMaterial.color;
+                    ringColor.a = 0.6f; // More visible ring
+                    ringMaterial.color = ringColor;
+                    ringRenderer.material = ringMaterial;
+                }
             }
         }
     }
@@ -107,12 +146,12 @@ public class AuraEffect : MonoBehaviour
     {
         if (!showVisualEffect) return;
         
-        // Create visual representation
-        GameObject visualObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        // Create cylindrical visual representation (invisible cylinder with ground ring)
+        GameObject visualObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         visualObject.name = "AuraVisual";
         visualObject.transform.SetParent(transform);
         visualObject.transform.localPosition = Vector3.zero;
-        visualObject.transform.localScale = Vector3.one * (radius * 2f);
+        visualObject.transform.localScale = new Vector3(radius * 2f, 10f, radius * 2f); // Tall cylinder
         
         // Remove the collider from the visual object
         Destroy(visualObject.GetComponent<Collider>());
@@ -140,6 +179,92 @@ public class AuraEffect : MonoBehaviour
         }
         
         auraRenderer.material = auraMaterial;
+        
+        // Create ground ring indicator
+        CreateGroundRing();
+    }
+    
+    private void CreateGroundRing()
+    {
+        // Create a hollow ring on the ground to show aura boundary
+        GameObject ringObject = new GameObject("GroundRing");
+        ringObject.transform.SetParent(transform);
+        ringObject.transform.localPosition = new Vector3(0, 0f, 0); // Exactly on the ground
+        
+        // Create mesh filter and renderer
+        MeshFilter meshFilter = ringObject.AddComponent<MeshFilter>();
+        MeshRenderer ringRenderer = ringObject.AddComponent<MeshRenderer>();
+        
+        // Create hollow ring mesh
+        Mesh ringMesh = CreateHollowRingMesh(radius, 0.2f); // 0.2f is ring thickness
+        meshFilter.mesh = ringMesh;
+        
+        // Create ring material
+        Material ringMaterial = new Material(Shader.Find("Standard"));
+        ringMaterial.SetFloat("_Mode", 3); // Transparent mode
+        ringMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        ringMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        ringMaterial.SetInt("_ZWrite", 0);
+        ringMaterial.DisableKeyword("_ALPHATEST_ON");
+        ringMaterial.EnableKeyword("_ALPHABLEND_ON");
+        ringMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        ringMaterial.renderQueue = 3001; // Above the main aura
+        
+        // Set ring color based on aura type (more visible than the cylinder)
+        Color ringColor = GetDefaultColorForAuraType(auraType);
+        ringColor.a = 0.6f; // More visible ring
+        ringMaterial.color = ringColor;
+        
+        ringRenderer.material = ringMaterial;
+        
+        // Store reference for pulsing effect
+        ringMaterial.name = "RingMaterial";
+    }
+    
+    private Mesh CreateHollowRingMesh(float outerRadius, float thickness)
+    {
+        Mesh mesh = new Mesh();
+        
+        int segments = 32; // Number of segments in the ring
+        float innerRadius = outerRadius - thickness;
+        
+        Vector3[] vertices = new Vector3[segments * 2];
+        int[] triangles = new int[segments * 6];
+        
+        // Create vertices for inner and outer circles
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = (2f * Mathf.PI * i) / segments;
+            float x = Mathf.Cos(angle);
+            float z = Mathf.Sin(angle);
+            
+            // Outer circle vertices
+            vertices[i] = new Vector3(x * outerRadius, 0, z * outerRadius);
+            // Inner circle vertices
+            vertices[i + segments] = new Vector3(x * innerRadius, 0, z * innerRadius);
+        }
+        
+        // Create triangles to connect inner and outer circles
+        for (int i = 0; i < segments; i++)
+        {
+            int next = (i + 1) % segments;
+            
+            // First triangle
+            triangles[i * 6] = i;
+            triangles[i * 6 + 1] = next;
+            triangles[i * 6 + 2] = i + segments;
+            
+            // Second triangle
+            triangles[i * 6 + 3] = next;
+            triangles[i * 6 + 4] = next + segments;
+            triangles[i * 6 + 5] = i + segments;
+        }
+        
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.RecalculateNormals();
+        
+        return mesh;
     }
     
     private Color GetDefaultColorForAuraType(UpgradeData.UpgradeType type)

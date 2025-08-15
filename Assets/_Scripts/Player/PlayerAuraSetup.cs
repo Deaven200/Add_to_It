@@ -44,8 +44,7 @@ public class PlayerAuraSetup : MonoBehaviour
         
         if (auraSystem != null)
         {
-            // Test adding a simple aura
-            StartCoroutine(TestAuraAfterDelay(playerObject));
+            // Aura system setup complete
         }
         else
         {
@@ -81,16 +80,7 @@ public class PlayerAuraSetup : MonoBehaviour
         return transform.root.gameObject;
     }
     
-    private System.Collections.IEnumerator TestAuraAfterDelay(GameObject playerObject)
-    {
-        yield return new WaitForSeconds(2f); // Wait 2 seconds
-        
-        AuraSystem auraSystem = playerObject.GetComponent<AuraSystem>();
-        if (auraSystem != null)
-        {
-            auraSystem.AddAura(UpgradeData.UpgradeType.CoinMagnetAura, 5f, UpgradeData.Rarity.Common);
-        }
-    }
+
     
     // Public method to manually setup aura system
     [ContextMenu("Setup Aura System")]
