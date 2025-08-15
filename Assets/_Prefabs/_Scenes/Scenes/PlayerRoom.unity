@@ -1005,13 +1005,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e4ad5cc021dfde4ea83219ea34d532b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseAuraRadius: 3
+  baseAuraRadius: 2
   enemyLayerMask:
     serializedVersion: 2
     m_Bits: 1
   coinLayerMask:
     serializedVersion: 2
     m_Bits: 1
+  visualOffset: {x: 0, y: 0, z: 0}
+  cylinderHeight: 10
+  centerOnPlayer: 1
   coinMagnetMaterial: {fileID: 0}
   slowAuraMaterial: {fileID: 0}
   shieldAuraMaterial: {fileID: 0}
