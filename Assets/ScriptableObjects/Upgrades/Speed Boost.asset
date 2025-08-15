@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Speed Boost
   m_EditorClassIdentifier: 
   upgradeName: Speed Boost
-  description: Increases move speed by 10%
+  description: Increases move speed by 5%
   icon: {fileID: 0}
   upgradeType: 1
-  value: 0.1
+  value: 5

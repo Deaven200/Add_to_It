@@ -115,6 +115,8 @@ public class UpgradeManager : MonoBehaviour
             return;
         }
         
+
+        
         switch (upgrade.upgradeType)
         {
             case UpgradeData.UpgradeType.Health:
@@ -249,6 +251,72 @@ public class UpgradeManager : MonoBehaviour
                 // Apply more upgrade options
                 upgradeOptionsBonus += (int)upgrade.value;
                 upgradeOptionsBonus = Mathf.Min(upgradeOptionsBonus, maxUpgradesToShow - baseUpgradesToShow);
+                break;
+                
+            // Aura System Upgrades
+            case UpgradeData.UpgradeType.CoinMagnetAura:
+                // Apply coin magnet aura
+                AuraSystem auraSystem = player.GetComponent<AuraSystem>();
+                if (auraSystem != null)
+                {
+                    auraSystem.AddAura(upgrade.upgradeType, upgrade.value, upgrade.rarity);
+                }
+                else
+                {
+                    Debug.LogError("AuraSystem component not found! Cannot apply aura upgrade.");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.SlowAura:
+                // Apply slow aura
+                AuraSystem slowAuraSystem = player.GetComponent<AuraSystem>();
+                if (slowAuraSystem != null)
+                {
+                    slowAuraSystem.AddAura(upgrade.upgradeType, upgrade.value, upgrade.rarity);
+                }
+                else
+                {
+                    Debug.LogError("AuraSystem component not found! Cannot apply aura upgrade.");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.ShieldAura:
+                // Apply shield aura
+                AuraSystem shieldAuraSystem = player.GetComponent<AuraSystem>();
+                if (shieldAuraSystem != null)
+                {
+                    shieldAuraSystem.AddAura(upgrade.upgradeType, upgrade.value, upgrade.rarity);
+                }
+                else
+                {
+                    Debug.LogError("AuraSystem component not found! Cannot apply aura upgrade.");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.DamageAura:
+                // Apply damage aura
+                AuraSystem damageAuraSystem = player.GetComponent<AuraSystem>();
+                if (damageAuraSystem != null)
+                {
+                    damageAuraSystem.AddAura(upgrade.upgradeType, upgrade.value, upgrade.rarity);
+                }
+                else
+                {
+                    Debug.LogError("AuraSystem component not found! Cannot apply aura upgrade.");
+                }
+                break;
+                
+            case UpgradeData.UpgradeType.HealAura:
+                // Apply heal aura
+                AuraSystem healAuraSystem = player.GetComponent<AuraSystem>();
+                if (healAuraSystem != null)
+                {
+                    healAuraSystem.AddAura(upgrade.upgradeType, upgrade.value, upgrade.rarity);
+                }
+                else
+                {
+                    Debug.LogError("AuraSystem component not found! Cannot apply aura upgrade.");
+                }
                 break;
                 
             default:

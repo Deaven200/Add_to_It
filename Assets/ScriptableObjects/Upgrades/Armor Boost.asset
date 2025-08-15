@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Armor Boost
   m_EditorClassIdentifier: 
   upgradeName: Armor Boost
-  description: Increases armor capacity by 8
+  description: Increases armor capacity by 4
   icon: {fileID: 0}
   upgradeType: 10
-  value: 8
+  value: 4
   rarity: 0

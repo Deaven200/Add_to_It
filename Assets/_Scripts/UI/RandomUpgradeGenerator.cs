@@ -30,6 +30,10 @@ public class RandomUpgradeGenerator : MonoBehaviour
 
     private System.Random systemRandom;
     private static int generationCounter = 0;
+    
+    [Header("Progress-Based Rarity")]
+    [SerializeField] private bool useProgressBasedRarity = true;
+    [SerializeField] private float progressRarityMultiplier = 0.1f; // How much progress affects rarity
 
     private void Awake()
     {
@@ -39,20 +43,20 @@ public class RandomUpgradeGenerator : MonoBehaviour
 
     private void InitializeDefaults()
     {
-        // Initialize rarity weights if empty
+        // Initialize rarity weights if empty - Much more dramatic rarity differences
         if (rarityWeights.Count == 0)
         {
             rarityWeights = new List<RarityWeights>
             {
-                new RarityWeights { rarity = UpgradeData.Rarity.Trashy, weight = 25f },
-                new RarityWeights { rarity = UpgradeData.Rarity.Poor, weight = 20f },
-                new RarityWeights { rarity = UpgradeData.Rarity.Common, weight = 18f },
-                new RarityWeights { rarity = UpgradeData.Rarity.Uncommon, weight = 15f },
-                new RarityWeights { rarity = UpgradeData.Rarity.Rare, weight = 10f },
-                new RarityWeights { rarity = UpgradeData.Rarity.Epic, weight = 6f },
-                new RarityWeights { rarity = UpgradeData.Rarity.Legendary, weight = 4f },
-                new RarityWeights { rarity = UpgradeData.Rarity.Mythic, weight = 1.5f },
-                new RarityWeights { rarity = UpgradeData.Rarity.Exotic, weight = 0.5f }
+                new RarityWeights { rarity = UpgradeData.Rarity.Trashy, weight = 35f },
+                new RarityWeights { rarity = UpgradeData.Rarity.Poor, weight = 25f },
+                new RarityWeights { rarity = UpgradeData.Rarity.Common, weight = 20f },
+                new RarityWeights { rarity = UpgradeData.Rarity.Uncommon, weight = 12f },
+                new RarityWeights { rarity = UpgradeData.Rarity.Rare, weight = 5f },
+                new RarityWeights { rarity = UpgradeData.Rarity.Epic, weight = 2f },
+                new RarityWeights { rarity = UpgradeData.Rarity.Legendary, weight = 0.8f },
+                new RarityWeights { rarity = UpgradeData.Rarity.Mythic, weight = 0.15f },
+                new RarityWeights { rarity = UpgradeData.Rarity.Exotic, weight = 0.05f }
             };
         }
 
@@ -62,16 +66,22 @@ public class RandomUpgradeGenerator : MonoBehaviour
             upgradeTypeConfigs = new List<UpgradeTypeConfig>
             {
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Damage, baseName = "Damage Boost", descriptionTemplate = "Increases weapon damage by {0}", minValue = 1f, maxValue = 9f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Health, baseName = "Health Boost", descriptionTemplate = "Increases maximum health by {0}", minValue = 5f, maxValue = 45f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.FireRate, baseName = "Fire Rate", descriptionTemplate = "Increases fire rate by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoveSpeed, baseName = "Speed Boost", descriptionTemplate = "Increases movement speed by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Health, baseName = "Health Boost", descriptionTemplate = "Increases maximum health by {0}", minValue = 1f, maxValue = 9f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.FireRate, baseName = "Fire Rate", descriptionTemplate = "Increases fire rate by {0}%", minValue = 1f, maxValue = 9f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoveSpeed, baseName = "Speed Boost", descriptionTemplate = "Increases movement speed by {0}%", minValue = 1f, maxValue = 9f, isPercentage = true },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.LifeOnKill, baseName = "Life Steal", descriptionTemplate = "Heals {0} health on kill", minValue = 1f, maxValue = 9f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.CoinMagnetRange, baseName = "Coin Magnet", descriptionTemplate = "Increases coin pickup range by {0}%", minValue = 10f, maxValue = 90f, isPercentage = true },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Shield, baseName = "Shield", descriptionTemplate = "Grants {0} shield points", minValue = 5f, maxValue = 25f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Armor, baseName = "Armor", descriptionTemplate = "Grants {0} armor points", minValue = 2f, maxValue = 15f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ChestDropRate, baseName = "Lucky Find", descriptionTemplate = "Increases chest drop rate by {0}%", minValue = 5f, maxValue = 45f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.CoinMagnetRange, baseName = "Coin Magnet", descriptionTemplate = "Increases coin pickup range by {0}%", minValue = 1f, maxValue = 9f, isPercentage = true },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Shield, baseName = "Shield", descriptionTemplate = "Grants {0} shield points", minValue = 1f, maxValue = 9f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.Armor, baseName = "Armor", descriptionTemplate = "Grants {0} armor points", minValue = 1f, maxValue = 9f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ChestDropRate, baseName = "Lucky Find", descriptionTemplate = "Increases chest drop rate by {0}%", minValue = 1f, maxValue = 9f, isPercentage = true },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ExplosionOnKill, baseName = "Explosive Kill", descriptionTemplate = "Creates explosion on kill with {0} radius", minValue = 1f, maxValue = 9f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoreOptions, baseName = "Choice Expansion", descriptionTemplate = "Increases upgrade choices by {0}", minValue = 1f, maxValue = 3f }
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.MoreOptions, baseName = "Choice Expansion", descriptionTemplate = "Increases upgrade choices by {0}", minValue = 1f, maxValue = 3f },
+                // Aura System Upgrades
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.CoinMagnetAura, baseName = "Coin Magnet Aura", descriptionTemplate = "Creates a coin magnet aura with {0} radius", minValue = 2f, maxValue = 8f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.SlowAura, baseName = "Slow Aura", descriptionTemplate = "Creates a slow aura with {0} radius", minValue = 2f, maxValue = 8f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ShieldAura, baseName = "Shield Aura", descriptionTemplate = "Creates a protective shield aura with {0} radius", minValue = 2f, maxValue = 8f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.DamageAura, baseName = "Damage Aura", descriptionTemplate = "Creates a damage aura with {0} radius", minValue = 2f, maxValue = 8f },
+                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.HealAura, baseName = "Heal Aura", descriptionTemplate = "Creates a healing aura with {0} radius", minValue = 2f, maxValue = 8f }
             };
         }
     }
@@ -110,7 +120,13 @@ public class RandomUpgradeGenerator : MonoBehaviour
             UpgradeData.UpgradeType.Armor,
             UpgradeData.UpgradeType.ChestDropRate,
             UpgradeData.UpgradeType.ExplosionOnKill,
-            UpgradeData.UpgradeType.MoreOptions
+            UpgradeData.UpgradeType.MoreOptions,
+            // Aura System Types
+            UpgradeData.UpgradeType.CoinMagnetAura,
+            UpgradeData.UpgradeType.SlowAura,
+            UpgradeData.UpgradeType.ShieldAura,
+            UpgradeData.UpgradeType.DamageAura,
+            UpgradeData.UpgradeType.HealAura
         };
 
         // Shuffle the available types
@@ -154,6 +170,9 @@ public class RandomUpgradeGenerator : MonoBehaviour
         float rarityMultiplier = GetRarityMultiplier(upgrade.rarity);
         upgrade.value = Mathf.Round(baseValue * rarityMultiplier);
         
+        // Clamp the final value to ensure it stays within 1-9 range
+        upgrade.value = Mathf.Clamp(upgrade.value, 1f, 9f);
+        
         // Generate name and description
         upgrade.upgradeName = GenerateUpgradeName(config.baseName, upgrade.rarity);
         upgrade.description = GenerateUpgradeDescription(config, upgrade.value);
@@ -163,8 +182,31 @@ public class RandomUpgradeGenerator : MonoBehaviour
 
     private UpgradeData.Rarity SelectRandomRarity()
     {
-        float totalWeight = 0f;
+        // Get player progress to influence rarity
+        float playerProgress = GetPlayerProgress();
+        
+        // Create adjusted weights based on progress
+        List<RarityWeights> adjustedWeights = new List<RarityWeights>();
         foreach (var rarityWeight in rarityWeights)
+        {
+            RarityWeights adjusted = new RarityWeights
+            {
+                rarity = rarityWeight.rarity,
+                weight = rarityWeight.weight
+            };
+            
+            // Boost rarer upgrades based on progress
+            if (useProgressBasedRarity && playerProgress > 0)
+            {
+                float rarityBoost = GetRarityProgressBoost(rarityWeight.rarity, playerProgress);
+                adjusted.weight *= rarityBoost;
+            }
+            
+            adjustedWeights.Add(adjusted);
+        }
+        
+        float totalWeight = 0f;
+        foreach (var rarityWeight in adjustedWeights)
         {
             totalWeight += rarityWeight.weight;
         }
@@ -172,7 +214,7 @@ public class RandomUpgradeGenerator : MonoBehaviour
         float randomValue = (float)(systemRandom.NextDouble() * totalWeight);
         float currentWeight = 0f;
         
-        foreach (var rarityWeight in rarityWeights)
+        foreach (var rarityWeight in adjustedWeights)
         {
             currentWeight += rarityWeight.weight;
             if (randomValue <= currentWeight)
@@ -182,6 +224,51 @@ public class RandomUpgradeGenerator : MonoBehaviour
         }
         
         return UpgradeData.Rarity.Common; // Fallback
+    }
+    
+    private float GetPlayerProgress()
+    {
+        // Get player progress from various sources
+        float progress = 0f;
+        
+        // Check highest level unlocked
+        if (ProgressManager.Instance != null)
+        {
+            progress += ProgressManager.Instance.GetHighestLevelUnlocked() * 0.1f;
+        }
+        
+        // Check player stats (if available)
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                progress += (playerHealth.maxHealth - 100) * 0.01f; // Health upgrades
+            }
+        }
+        
+        return Mathf.Clamp(progress, 0f, 10f); // Cap progress at 10
+    }
+    
+    private float GetRarityProgressBoost(UpgradeData.Rarity rarity, float progress)
+    {
+        // Higher rarity upgrades get bigger boosts from progress
+        float baseBoost = 1f + (progress * progressRarityMultiplier);
+        
+        switch (rarity)
+        {
+            case UpgradeData.Rarity.Trashy: return 1f; // No boost for trashy
+            case UpgradeData.Rarity.Poor: return 1f; // No boost for poor
+            case UpgradeData.Rarity.Common: return baseBoost * 0.5f;
+            case UpgradeData.Rarity.Uncommon: return baseBoost * 1f;
+            case UpgradeData.Rarity.Rare: return baseBoost * 2f;
+            case UpgradeData.Rarity.Epic: return baseBoost * 3f;
+            case UpgradeData.Rarity.Legendary: return baseBoost * 5f;
+            case UpgradeData.Rarity.Mythic: return baseBoost * 8f;
+            case UpgradeData.Rarity.Exotic: return baseBoost * 12f;
+            default: return 1f;
+        }
     }
 
     private float GetRarityMultiplier(UpgradeData.Rarity rarity)

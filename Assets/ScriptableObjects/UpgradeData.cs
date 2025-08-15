@@ -33,6 +33,12 @@ public class UpgradeData : ScriptableObject
         BulletSpeed, // New weapon upgrade type
         AmmoCapacity, // New weapon upgrade type
         ReloadSpeed, // New weapon upgrade type
+        // Aura System Types
+        CoinMagnetAura, // Creates a coin magnet aura
+        SlowAura, // Creates a slow aura that affects enemies
+        ShieldAura, // Creates a shield aura that protects the player
+        DamageAura, // Creates a damage aura that hurts enemies
+        HealAura, // Creates a heal aura that heals the player
         // You can add more types later
     }
 

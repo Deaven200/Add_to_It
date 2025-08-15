@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Shield Boost
   m_EditorClassIdentifier: 
   upgradeName: Shield Boost
-  description: Increases shield capacity by 12
+  description: Increases shield capacity by 5
   icon: {fileID: 0}
   upgradeType: 8
-  value: 12
+  value: 5
   rarity: 0

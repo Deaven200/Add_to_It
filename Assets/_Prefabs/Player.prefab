@@ -648,6 +648,7 @@ MonoBehaviour:
   m_Spacing: {x: 10, y: 10}
   m_Constraint: 1
   m_ConstraintCount: 3
+
 --- !u!1 &1485282375026175312
 GameObject:
   m_ObjectHideFlags: 0
@@ -2753,6 +2754,7 @@ Transform:
   - {fileID: 8724952666069553567}
   - {fileID: 1637073090570381920}
   - {fileID: 7250096312104884268}
+  - {fileID: 8593865140333092767}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4537989391357129962
@@ -2924,7 +2926,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 176ad89a5d8702444b6c611ce2faa10d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  money: 0
+  currencyName: $
+  startingMoney: 0
+  moneyText: {fileID: 8470332097376671658}
+  displayFormat: '{1} {0}'
 --- !u!114 &489202845382975494
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3049,6 +3054,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rarityWeights: []
   upgradeTypeConfigs: []
+  useProgressBasedRarity: 1
+  progressRarityMultiplier: 0.1
 --- !u!114 &7643413637473965969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4508,6 +4515,14 @@ PrefabInstance:
       propertyPath: m_fontColor32.rgba
       value: 4284210543
       objectReference: {fileID: 0}
+    - target: {fileID: 3487603392570879879, guid: 841c96b5ad3ed174e93db436ddb83ecb, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 3487603392570879879, guid: 841c96b5ad3ed174e93db436ddb83ecb, type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6647682399377344843, guid: 841c96b5ad3ed174e93db436ddb83ecb, type: 3}
       propertyPath: m_Name
       value: MoneyText
@@ -4522,3 +4537,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 104906039149965967, guid: 841c96b5ad3ed174e93db436ddb83ecb, type: 3}
   m_PrefabInstance: {fileID: 5038084206184085549}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8470332097376671658 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3487603392570879879, guid: 841c96b5ad3ed174e93db436ddb83ecb, type: 3}
+  m_PrefabInstance: {fileID: 5038084206184085549}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

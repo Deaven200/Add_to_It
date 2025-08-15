@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Power Shot
   m_EditorClassIdentifier: 
   upgradeName: Power Shot
-  description: Increases damage by 1
+  description: Increases damage by 3
   icon: {fileID: 0}
   upgradeType: 0
-  value: 1
+  value: 3

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Health Well
   m_EditorClassIdentifier: 
   upgradeName: Health Well
-  description: 
+  description: Increases maximum health by 5
   icon: {fileID: 0}
   upgradeType: 9
-  value: 1
+  value: 5
