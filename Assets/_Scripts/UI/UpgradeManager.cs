@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI; // Add this for LayoutRebuilder
+using UnityEngine.EventSystems; // Add this for EventSystem
 
 public class UpgradeManager : MonoBehaviour
 {
@@ -24,8 +25,14 @@ public class UpgradeManager : MonoBehaviour
 
     public bool isPaused = false;
     
+    // Track if we're in upgrade menu mode vs regular pause mode
+    private bool isInUpgradeMenu = false;
+    
     private void Awake()
     {
+        // Ensure EventSystem exists (required for UI interactions)
+        EnsureEventSystemExists();
+        
         // Try to find the upgrade generator if not assigned
         if (upgradeGenerator == null)
         {
@@ -35,6 +42,58 @@ public class UpgradeManager : MonoBehaviour
                 // Create one if it doesn't exist
                 GameObject generatorGO = new GameObject("RandomUpgradeGenerator");
                 upgradeGenerator = generatorGO.AddComponent<RandomUpgradeGenerator>();
+            }
+        }
+    }
+    
+    void EnsureEventSystemExists()
+    {
+        // First check if there's already an EventSystem in the scene
+        EventSystem existingEventSystem = FindObjectOfType<EventSystem>();
+        
+        if (existingEventSystem == null)
+        {
+            // Debug.Log("UpgradeManager: No EventSystem found! Creating one..."); // Commented out to reduce console spam
+            GameObject eventSystemGO = new GameObject("EventSystem");
+            eventSystemGO.AddComponent<EventSystem>();
+            eventSystemGO.AddComponent<StandaloneInputModule>();
+            
+            // Force the EventSystem to be current
+            EventSystem.current = eventSystemGO.GetComponent<EventSystem>();
+            
+            // Debug.Log("UpgradeManager: EventSystem created successfully!"); // Commented out to reduce console spam
+        }
+        else
+        {
+            // Debug.Log($"UpgradeManager: EventSystem found: {existingEventSystem.name}"); // Commented out to reduce console spam
+            // Make sure it's set as current
+            EventSystem.current = existingEventSystem;
+        }
+        
+        // Double-check that EventSystem.current is not null
+        if (EventSystem.current == null)
+        {
+            Debug.LogError("UpgradeManager: EventSystem.current is still null after creation! This is a critical error.");
+        }
+        else
+        {
+            // Debug.Log($"UpgradeManager: EventSystem.current is now: {EventSystem.current.name}"); // Commented out to reduce console spam
+        }
+    }
+    
+    void Update()
+    {
+        // Only handle ESC key if we're in upgrade mode
+        // Let UIManager handle regular pause functionality
+        if (Input.GetKeyDown(KeyCode.Escape) && IsUpgradeMenuActive())
+        {
+            if (isPaused)
+            {
+                ResumeGame();
+            }
+            else
+            {
+                PauseGame();
             }
         }
     }
@@ -70,7 +129,30 @@ public class UpgradeManager : MonoBehaviour
         foreach(UpgradeData upgradeData in _currentUpgrades)
         {
             GameObject cardGO = Instantiate(upgradeCardPrefab, _buttonContainerInstance.transform);
-            cardGO.GetComponent<UpgradeCard>().SetUpgradeData(upgradeData);
+            UpgradeCard card = cardGO.GetComponent<UpgradeCard>();
+            if (card != null)
+            {
+                card.SetUpgradeData(upgradeData);
+                // Debug.Log($"UpgradeManager: Created upgrade card for: {upgradeData.upgradeName}"); // Commented out to reduce console spam
+                
+                // Additional debugging for the button
+                Button button = cardGO.GetComponent<Button>();
+                if (button != null)
+                {
+                    // Debug.Log($"UpgradeManager: Button found on card {upgradeData.upgradeName} - Interactable: {button.interactable}"); // Commented out to reduce console spam
+                    
+                    // REMOVED: Automatic button testing - this was causing upgrades to be selected automatically
+                    // StartCoroutine(TestButtonAfterDelay(button, upgradeData.upgradeName));
+                }
+                else
+                {
+                    Debug.LogError($"UpgradeManager: No Button component found on card {upgradeData.upgradeName}!");
+                }
+            }
+            else
+            {
+                Debug.LogError("UpgradeManager: Failed to get UpgradeCard component from instantiated prefab!");
+            }
         }
         
         // Force layout update to ensure proper positioning
@@ -326,15 +408,38 @@ public class UpgradeManager : MonoBehaviour
     /// </summary>
     public void PauseGame()
     {
+        // Debug.Log("UpgradeManager: Pausing game..."); // Commented out to reduce console spam
         isPaused = true;
+        
         // Set the game's time scale to 0, which freezes all physics-based movement and animations.
         Time.timeScale = 0f;
-        // Activate the pause menu UI.
-        _activeUpgradeInstance.SetActive(true);
+        
+        // If we're in upgrade menu mode, show the upgrade UI
+        if (isInUpgradeMenu && _activeUpgradeInstance != null)
+        {
+            _activeUpgradeInstance.SetActive(true);
+        }
+        // Otherwise, show a regular pause menu (you can create one or just show a simple message)
+        else
+        {
+            Debug.Log("UpgradeManager: Game paused - Press ESC to resume");
+            // You can add a simple pause menu here if needed
+        }
 
         // Unlock the cursor and make it visible so we can click buttons.
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        
+        // Force canvas update to ensure UI is properly rendered
+        Canvas.ForceUpdateCanvases();
+        
+        // Ensure the EventSystem is working
+        if (UnityEngine.EventSystems.EventSystem.current != null)
+        {
+            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+        }
+        
+        // Debug.Log("UpgradeManager: Game paused successfully. TimeScale: " + Time.timeScale + ", Cursor visible: " + Cursor.visible); // Commented out to reduce console spam
     }
 
     /// <summary>
@@ -343,19 +448,41 @@ public class UpgradeManager : MonoBehaviour
     /// </summary>
     public void ResumeGame()
     {
+        // Debug.Log("UpgradeManager: Resuming game..."); // Commented out to reduce console spam
         isPaused = false;
+        isInUpgradeMenu = false;
+        
         // Set the time scale back to 1 to resume normal game speed.
         Time.timeScale = 1f;
+        
         // Deactivate the pause menu UI.
-        _activeUpgradeInstance.SetActive(false);
+        if (_activeUpgradeInstance != null)
+        {
+            _activeUpgradeInstance.SetActive(false);
+        }
 
         // Re-lock the cursor and hide it for FPS controls.
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        
+        // Debug.Log("UpgradeManager: Game resumed successfully. TimeScale: " + Time.timeScale + ", Cursor visible: " + Cursor.visible); // Commented out to reduce console spam
+    }
+    
+    /// <summary>
+    /// Public method to check if upgrade menu is currently active
+    /// </summary>
+    public bool IsUpgradeMenuActive()
+    {
+        return isPaused && _activeUpgradeInstance != null && _activeUpgradeInstance.activeInHierarchy;
     }
 
     public void OnUpgradeButtonPressed(UpgradeChest chest = null)
     {
+        // Debug.Log("UpgradeManager: OnUpgradeButtonPressed called"); // Commented out to reduce console spam
+        
+        // Ensure EventSystem exists before creating UI
+        EnsureEventSystemExists();
+        
         // Store reference to the chest that opened this menu
         _currentChest = chest;
         
@@ -364,10 +491,16 @@ public class UpgradeManager : MonoBehaviour
         {
             _activeUpgradeInstance = Instantiate(upgradePanelPrefab, canvas.transform);
             _buttonContainerInstance = _activeUpgradeInstance.transform.Find("UpgradeButtonContainer").gameObject;
+            // Debug.Log("UpgradeManager: Created new upgrade panel instance"); // Commented out to reduce console spam
         }
         
-        // Always show new upgrade choices when any chest is opened
+        // Set upgrade menu mode and show choices
+        isInUpgradeMenu = true;
         ShowUpgradeChoices();
+        
+        // Pause the game after showing the upgrade choices
+        // Debug.Log("UpgradeManager: About to pause game..."); // Commented out to reduce console spam
+        PauseGame();
     }
     
     // Getter for current upgrade options bonus
@@ -381,4 +514,22 @@ public class UpgradeManager : MonoBehaviour
     {
         upgradeOptionsBonus = 0;
     }
+    
+    // Test coroutine to check if buttons are working (DISABLED - was causing automatic upgrades)
+    /*
+    System.Collections.IEnumerator TestButtonAfterDelay(Button button, string upgradeName)
+    {
+        yield return new WaitForSecondsRealtime(1f); // Wait 1 second in real time (not affected by timeScale)
+        
+        if (button != null && button.interactable)
+        {
+            Debug.Log($"UpgradeManager: Testing button for {upgradeName} - attempting programmatic click");
+            button.onClick.Invoke();
+        }
+        else
+        {
+            Debug.LogError($"UpgradeManager: Button for {upgradeName} is null or not interactable!");
+        }
+    }
+    */
 }

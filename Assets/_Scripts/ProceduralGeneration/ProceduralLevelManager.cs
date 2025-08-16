@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using System.Threading.Tasks;
+using UnityEngine.AI;
 
 public class ProceduralLevelManager : MonoBehaviour
 {
@@ -32,6 +33,15 @@ public class ProceduralLevelManager : MonoBehaviour
     [Header("Persistence")]
     [SerializeField] private bool enablePersistence = true;
     
+    [Header("Navigation Settings")]
+    [SerializeField] private bool enableNavigation = true;
+    [SerializeField] private float navMeshUpdateRadius = 50f; // Only update NavMesh around player
+    [SerializeField] private float navMeshAgentRadius = 0.5f;
+    [SerializeField] private float navMeshAgentHeight = 2f;
+    [SerializeField] private float navMeshMaxSlope = 45f; // Currently unused - NavMeshBuildSettings doesn't have agentMaxSlope
+    [SerializeField] private bool autoBakeNavMesh = true;
+    [SerializeField] private float navMeshBakeDelay = 2f; // Delay before first NavMesh bake
+    
     [Header("Debug")]
     [SerializeField] private bool showDebugInfo = false;
     [SerializeField] private bool showPerformanceStats = false;
@@ -52,6 +62,9 @@ public class ProceduralLevelManager : MonoBehaviour
     // Components
     private ChunkPersistenceManager persistenceManager;
     private TerrainGenerator terrainGenerator;
+    private bool navMeshInitialized = false;
+    private float lastNavMeshUpdate = 0f;
+    private Vector3 lastNavMeshUpdatePosition;
     
     // Public properties
     public int ChunkSize => chunkSize;
@@ -97,6 +110,9 @@ public class ProceduralLevelManager : MonoBehaviour
             
             // Set up persistence manager
             SetupPersistenceManager();
+            
+            // Set up navigation system
+            SetupNavigationSystem();
             
             // Initialize chunk pool
             InitializeChunkPool();
@@ -165,6 +181,33 @@ public class ProceduralLevelManager : MonoBehaviour
             
             persistenceManager.SetChunkManager(this);
         }
+    }
+    
+    void SetupNavigationSystem()
+    {
+        if (!enableNavigation) return;
+        
+        try
+        {
+            SetupOldNavMeshSystem();
+            
+            if (showDebugInfo)
+            {
+                Debug.Log("Navigation system initialized - Using old NavMesh system");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error setting up navigation system: {e.Message}");
+        }
+    }
+    
+    void SetupOldNavMeshSystem()
+    {
+        // For the old NavMesh system, we'll bake manually when chunks are generated
+        // The old system doesn't require additional components
+        // Note: NavMeshBuildSettings are configured when building the NavMesh
+        // We'll use the default settings and configure them during the build process
     }
     
     void InitializeChunkPool()
@@ -403,6 +446,12 @@ public class ProceduralLevelManager : MonoBehaviour
                 persistenceManager.SaveChunk(chunkPos, worldPos, true);
             }
             
+            // Update NavMesh if navigation is enabled
+            if (enableNavigation)
+            {
+                UpdateNavMesh();
+            }
+            
             if (showDebugInfo && wasPreviouslySaved)
             {
                 Debug.Log($"Restored previously saved chunk at {chunkPos}");
@@ -444,6 +493,111 @@ public class ProceduralLevelManager : MonoBehaviour
         {
             Debug.LogError($"Error removing chunk at {chunkPos}: {e.Message}");
         }
+    }
+    
+    void UpdateNavMesh()
+    {
+        if (!enableNavigation) return;
+        
+        try
+        {
+            // Check if we need to update NavMesh based on distance and time
+            if (player != null)
+            {
+                float distanceToLastUpdate = Vector3.Distance(player.position, lastNavMeshUpdatePosition);
+                float timeSinceLastUpdate = Time.time - lastNavMeshUpdate;
+                
+                // Only update if player moved significantly or enough time passed
+                if (distanceToLastUpdate > navMeshUpdateRadius || timeSinceLastUpdate > 5f)
+                {
+                    UpdateOldNavMesh();
+                    
+                    lastNavMeshUpdate = Time.time;
+                    lastNavMeshUpdatePosition = player.position;
+                    
+                    if (showVerboseLogs)
+                    {
+                        Debug.Log($"NavMesh updated at player position {player.position}");
+                    }
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error updating NavMesh: {e.Message}");
+        }
+    }
+    
+    void UpdateOldNavMesh()
+    {
+        // For the old system, we need to manually collect sources and build
+        List<NavMeshBuildSource> sources = new List<NavMeshBuildSource>();
+        
+        // Collect all active chunks as NavMesh sources
+        foreach (var chunk in activeChunks.Values)
+        {
+            if (chunk != null && chunk.IsInitialized())
+            {
+                // Get the chunk's collider as a NavMesh source
+                Collider chunkCollider = chunk.GetComponent<Collider>();
+                if (chunkCollider != null)
+                {
+                    NavMeshBuildSource source = new NavMeshBuildSource();
+                    source.shape = NavMeshBuildSourceShape.Mesh;
+                    source.sourceObject = chunk.GetComponent<MeshFilter>()?.sharedMesh;
+                    source.transform = chunk.transform.localToWorldMatrix;
+                    source.area = 0; // Walkable area
+                    sources.Add(source);
+                }
+            }
+        }
+        
+        if (sources.Count > 0)
+        {
+            // Get build settings with our custom parameters
+            NavMeshBuildSettings buildSettings = NavMesh.GetSettingsByID(0);
+            buildSettings.agentRadius = navMeshAgentRadius;
+            buildSettings.agentHeight = navMeshAgentHeight;
+            // Note: agentMaxSlope is not available in NavMeshBuildSettings
+            // The slope limit is handled by the NavMesh areas and walkable surfaces
+            
+            // Calculate bounds for NavMesh
+            Bounds navMeshBounds = CalculateNavMeshBounds();
+            
+            // Build NavMesh
+            NavMeshData navMeshData = NavMeshBuilder.BuildNavMeshData(buildSettings, sources, navMeshBounds, Vector3.zero, Quaternion.identity);
+            
+            // Remove old NavMesh and add new one
+            NavMesh.RemoveAllNavMeshData();
+            NavMesh.AddNavMeshData(navMeshData);
+            
+            navMeshInitialized = true;
+        }
+    }
+    
+    Bounds CalculateNavMeshBounds()
+    {
+        if (activeChunks.Count == 0) return new Bounds(Vector3.zero, Vector3.one * 100f);
+        
+        Vector3 min = Vector3.positiveInfinity;
+        Vector3 max = Vector3.negativeInfinity;
+        
+        foreach (var chunk in activeChunks.Values)
+        {
+            if (chunk != null)
+            {
+                Bounds chunkBounds = chunk.GetComponent<MeshRenderer>()?.bounds ?? new Bounds(chunk.transform.position, Vector3.one * chunkSize);
+                min = Vector3.Min(min, chunkBounds.min);
+                max = Vector3.Max(max, chunkBounds.max);
+            }
+        }
+        
+        // Add some padding
+        Vector3 size = max - min;
+        Vector3 center = (min + max) * 0.5f;
+        size += Vector3.one * 10f; // Add 10 units padding
+        
+        return new Bounds(center, size);
     }
     
     void LogPerformanceStats()
@@ -500,6 +654,25 @@ public class ProceduralLevelManager : MonoBehaviour
         return chunk;
     }
     
+    /// <summary>
+    /// Check if NavMesh is ready for navigation
+    /// </summary>
+    public bool IsNavMeshReady()
+    {
+        return navMeshInitialized && NavMesh.CalculateTriangulation().vertices.Length > 0;
+    }
+    
+    /// <summary>
+    /// Force update the NavMesh (useful for debugging or manual control)
+    /// </summary>
+    public void ForceNavMeshUpdate()
+    {
+        if (enableNavigation)
+        {
+            UpdateOldNavMesh();
+        }
+    }
+    
     System.Collections.IEnumerator WaitForInitialGeneration()
     {
         if (showVerboseLogs)
@@ -526,6 +699,12 @@ public class ProceduralLevelManager : MonoBehaviour
         
         // Ensure player is on solid ground
         EnsurePlayerOnGround();
+        
+        // Initial NavMesh bake after delay
+        if (enableNavigation && autoBakeNavMesh)
+        {
+            StartCoroutine(DelayedNavMeshBake());
+        }
         
         isInitialized = true;
         
@@ -587,6 +766,21 @@ public class ProceduralLevelManager : MonoBehaviour
         if (rb != null)
         {
             rb.isKinematic = false;
+        }
+    }
+    
+    System.Collections.IEnumerator DelayedNavMeshBake()
+    {
+        yield return new WaitForSeconds(navMeshBakeDelay);
+        
+        if (enableNavigation)
+        {
+            UpdateOldNavMesh();
+            
+            if (showDebugInfo)
+            {
+                Debug.Log("Initial NavMesh bake completed!");
+            }
         }
     }
     

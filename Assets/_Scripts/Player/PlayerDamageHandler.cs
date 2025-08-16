@@ -59,6 +59,7 @@ public class PlayerDamageHandler : MonoBehaviour
             if (playerHealth != null && remainingDamage > 0)
             {
                 playerHealth.TakeDamage(remainingDamage);
+                RecordDamageForPerformance(totalDamage);
             }
             return;
         }
@@ -80,11 +81,25 @@ public class PlayerDamageHandler : MonoBehaviour
             {
                 playerHealth.TakeDamage(remainingDamage);
                 Debug.Log($"Health took {remainingDamage} damage.");
+                RecordDamageForPerformance(totalDamage);
             }
         }
         else if (remainingDamage > 0 && shieldBlocksAllDamage)
         {
             Debug.Log($"Shield blocked all damage. {remainingDamage} damage prevented.");
+        }
+    }
+    
+    /// <summary>
+    /// Record damage for performance tracking
+    /// </summary>
+    private void RecordDamageForPerformance(int damage)
+    {
+        // Find the dynamic spawner and record damage
+        DynamicEnemySpawner spawner = FindObjectOfType<DynamicEnemySpawner>();
+        if (spawner != null)
+        {
+            spawner.RecordPlayerDamage(damage);
         }
     }
     

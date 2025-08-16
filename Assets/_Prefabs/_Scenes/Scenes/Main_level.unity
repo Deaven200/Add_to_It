@@ -216,6 +216,123 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &658449905
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 658449908}
+  - component: {fileID: 658449907}
+  - component: {fileID: 658449906}
+  m_Layer: 0
+  m_Name: EnemySpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &658449906
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658449905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2fa63a18ff45aa4f96002295a866721, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  setupInstructions: 'SETUP INSTRUCTIONS:
+
+
+    1. Replace your existing EnemySpawner
+    with DynamicEnemySpawner
+
+    2. Assign the example EnemyType ScriptableObjects
+    to ''Available Enemy Types''
+
+    3. Assign the example SpecialWave ScriptableObjects
+    to ''Available Special Waves''
+
+    4. Create a PlayerPerformanceTracker ScriptableObject
+
+    5.
+    Configure spawner settings as desired
+
+
+    The system will automatically handle
+    dynamic difficulty, wave phases, and performance tracking!'
+  autoSetupOnStart: 1
+  exampleEnemyTypes: []
+  exampleSpecialWaves: []
+  examplePerformanceTracker: {fileID: 0}
+--- !u!114 &658449907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658449905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ae4de5a05a60fc4893a0b681d4ab38a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  availableEnemyTypes:
+  - {fileID: 11400000, guid: 76f855bc2b70ec343a5613ded0c26951, type: 2}
+  availableSpecialWaves:
+  - {fileID: 11400000, guid: 177def3bc2f4f4e4f95af156eed6e004, type: 2}
+  basePointBudget: 100
+  pointBudgetIncreasePerWave: 20
+  timeBetweenWaves: 5
+  minSpawnDistance: 50
+  maxSpawnDistance: 75
+  performanceTracker: {fileID: 11400000, guid: df799831af9f86e47b774b57aecbe201, type: 2}
+  OnWaveStart:
+    m_PersistentCalls:
+      m_Calls: []
+  OnWaveComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPhaseMessage:
+    m_PersistentCalls:
+      m_Calls: []
+  OnSpecialWaveStart:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 11400000, guid: 177def3bc2f4f4e4f95af156eed6e004, type: 2}
+        m_TargetAssemblyTypeName: UnityEngine.Object, UnityEngine
+        m_MethodName: set_name
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  showDebugInfo: 1
+  pauseSpawning: 0
+--- !u!4 &658449908
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658449905}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.586737, y: 4.21596, z: -1.1941165}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1481213785
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,6 +436,55 @@ MonoBehaviour:
   targetScene: Main_level
   showFreezeMessage: 1
   debugMode: 0
+--- !u!1 &1930109597
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1930109599}
+  - component: {fileID: 1930109598}
+  m_Layer: 0
+  m_Name: EnemyDropManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1930109598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930109597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a17306bc0d1891478a3b5cf71cc30a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dropSettings:
+    chestDropRate: 100
+    chestDropRadius: 2
+    chestPrefab: {fileID: 5058105363414093012, guid: 796d8558564972e4d97000e640f58793, type: 3}
+  showDropChance: 1
+--- !u!4 &1930109599
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930109597}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -9.363945, y: -1.8199997, z: -12.492088}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2000000000
 GameObject:
   m_ObjectHideFlags: 0
@@ -379,6 +545,13 @@ MonoBehaviour:
   fogDistance: 100
   fogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   enablePersistence: 1
+  enableNavigation: 1
+  navMeshUpdateRadius: 50
+  navMeshAgentRadius: 0.5
+  navMeshAgentHeight: 2
+  navMeshMaxSlope: 45
+  autoBakeNavMesh: 1
+  navMeshBakeDelay: 2
   showDebugInfo: 1
   showPerformanceStats: 0
   showVerboseLogs: 0
@@ -406,3 +579,5 @@ SceneRoots:
   - {fileID: 2000000001}
   - {fileID: 1481213787}
   - {fileID: 1691438953}
+  - {fileID: 658449908}
+  - {fileID: 1930109599}

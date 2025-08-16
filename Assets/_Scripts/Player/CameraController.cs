@@ -45,9 +45,17 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        // Check if the game is paused (upgrade menu is open)
+        // Check if the game is paused (either upgrade menu or regular pause)
         bool isPaused = false;
-        if (upgradeManager != null)
+        
+        // Check UIManager pause state (regular pause menu)
+        if (UIManager.Instance != null)
+        {
+            isPaused = UIManager.Instance.IsPaused();
+        }
+        
+        // Check UpgradeManager pause state (upgrade menu)
+        if (!isPaused && upgradeManager != null)
         {
             isPaused = upgradeManager.isPaused;
         }

@@ -1,134 +1,311 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 /// <summary>
-/// Manages the pause state of the game.
-/// Handles showing/hiding the pause menu and controlling game time.
+/// Handles pause menu button interactions.
+/// This script should be attached to the PauseMenuPanel GameObject.
 /// </summary>
 public class PauseManager : MonoBehaviour
 {
-    // A reference to the Pause Menu UI Panel.
-    // Assign this in the Unity Inspector.
-    [SerializeField]
-    private GameObject pauseMenuPanel;
-
-    [SerializeField] private GameObject settingsPanelPrefab;
-    [SerializeField] private GameObject canvas;
-    [SerializeField] private SimpleUpgradeDisplay upgradeDisplay;
-    private GameObject _activeSettingsInstance;
-
-    // Tracks the current paused state of the game.
-    private bool isPaused = false;
+    [Header("References")]
+    [SerializeField] private UIManager uiManager;
+    
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugging = false; // Disabled by default for performance
     
     void Start()
     {
-        // Try to find the upgrade display if not assigned
-        if (upgradeDisplay == null)
+        Debug.Log($"PauseManager: Start() called in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+        
+        // Ensure EventSystem exists (only once at startup)
+        EnsureEventSystemExists();
+        
+        // Always use the singleton instance of UIManager
+        // This ensures we get the persistent UIManager that survives scene changes
+        uiManager = UIManager.Instance;
+        
+        if (uiManager == null)
         {
-            upgradeDisplay = FindObjectOfType<SimpleUpgradeDisplay>();
-            if (upgradeDisplay != null)
-            {
-                Debug.Log("PauseManager: Found SimpleUpgradeDisplay automatically");
-            }
-            else
-            {
-                Debug.LogWarning("PauseManager: SimpleUpgradeDisplay not found! Upgrade display won't work.");
-            }
+            Debug.LogError("PauseManager: UIManager.Instance is null! Pause menu buttons will not work.");
         }
+        else if (enableDebugging)
+        {
+            Debug.Log("PauseManager: UIManager found successfully via singleton");
+        }
+        
+        // Debug button setup (only if debugging is enabled)
+        if (enableDebugging)
+        {
+            DebugButtonSetup();
+        }
+        
+        Debug.Log($"PauseManager: Start() completed in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
     }
-
-    // The Update method is called once per frame.
-    void Update()
+    
+    // Called when the scene changes
+    void OnEnable()
     {
-        // Listen for the "Escape" key press.
-        if (Input.GetKeyDown(KeyCode.Escape))
+        Debug.Log($"PauseManager: OnEnable() called in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+        EnsureEventSystemExists();
+    }
+    
+    void EnsureEventSystemExists()
+    {
+        if (EventSystem.current == null)
         {
-            // If the game is already paused, resume it. Otherwise, pause it.
-            if (isPaused)
+            EventSystem existingEventSystem = FindObjectOfType<EventSystem>();
+            if (existingEventSystem != null)
             {
-                ResumeGame();
+                EventSystem.current = existingEventSystem;
+                if (enableDebugging)
+                {
+                    Debug.Log($"PauseManager: Set EventSystem.current to {existingEventSystem.name}");
+                }
             }
             else
             {
-                PauseGame();
+                Debug.LogWarning("PauseManager: No EventSystem found in scene! Creating one automatically...");
+                
+                // Create EventSystem automatically
+                GameObject eventSystemGO = new GameObject("EventSystem");
+                EventSystem newEventSystem = eventSystemGO.AddComponent<EventSystem>();
+                eventSystemGO.AddComponent<StandaloneInputModule>();
+                
+                // Set it as current
+                EventSystem.current = newEventSystem;
+                
+                if (enableDebugging)
+                {
+                    Debug.Log($"PauseManager: Created EventSystem: {eventSystemGO.name}");
+                }
             }
         }
     }
-
+    
+    void DebugButtonSetup()
+    {
+        if (!enableDebugging) return; // Early exit if debugging is disabled
+        
+        Button[] buttons = GetComponentsInChildren<Button>();
+        Debug.Log($"PauseManager: Found {buttons.Length} buttons in pause menu");
+        
+        foreach (Button button in buttons)
+        {
+            int eventCount = button.onClick.GetPersistentEventCount();
+            Debug.Log($"PauseManager: Button '{button.name}' has {eventCount} click events");
+            
+            if (eventCount == 0)
+            {
+                Debug.LogWarning($"PauseManager: Button '{button.name}' has no click events! It won't work.");
+            }
+            else
+            {
+                for (int i = 0; i < eventCount; i++)
+                {
+                    var target = button.onClick.GetPersistentTarget(i);
+                    var methodName = button.onClick.GetPersistentMethodName(i);
+                    Debug.Log($"PauseManager: Button '{button.name}' event {i}: {target?.GetType().Name}.{methodName}");
+                }
+            }
+        }
+    }
+    
     /// <summary>
-    /// Pauses the game, shows the menu, and stops time.
+    /// Called when the "Resume" button is clicked.
     /// </summary>
-    public void PauseGame()
+    public void OnResumeButtonPressed()
     {
-        isPaused = true;
-        // Set the game's time scale to 0, which freezes all physics-based movement and animations.
-        Time.timeScale = 0f;
-        // Activate the pause menu UI.
-        pauseMenuPanel.SetActive(true);
-
-        // Refresh upgrade display if available
-        if (upgradeDisplay != null)
+        Debug.Log($"PauseManager: OnResumeButtonPressed called in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+        
+        if (uiManager != null)
         {
-            Debug.Log("PauseManager: Calling upgradeDisplay.OnPauseMenuOpen()");
-            upgradeDisplay.OnPauseMenuOpen();
+            uiManager.ResumeGame();
         }
         else
         {
-            Debug.LogWarning("PauseManager: upgradeDisplay is null! Cannot refresh upgrade display.");
+            Debug.LogError("PauseManager: UIManager is null! Cannot resume game.");
         }
-
-        // Unlock the cursor and make it visible so we can click buttons.
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
     }
-
+    
     /// <summary>
-    /// Resumes the game, hides the menu, and restores time.
-    /// This is public so our "Continue" button can call it.
+    /// Called when the "Settings" button is clicked.
     /// </summary>
-    public void ResumeGame()
-    {
-        isPaused = false;
-        // Set the time scale back to 1 to resume normal game speed.
-        Time.timeScale = 1f;
-        // Deactivate the pause menu UI.
-        pauseMenuPanel.SetActive(false);
-
-        // Refresh upgrade display if available
-        if (upgradeDisplay != null)
-        {
-            Debug.Log("PauseManager: Calling upgradeDisplay.OnPauseMenuClose()");
-            upgradeDisplay.OnPauseMenuClose();
-        }
-
-        // Re-lock the cursor and hide it for FPS controls.
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
-
-    /// <summary>
-    /// Loads the main menu scene using our persistent GameSceneManager.
-    /// This is public so our "Quit" button can call it.
-    /// </summary>
-    public void QuitToMainMenu()
-    {
-        // We must un-pause the game before leaving the scene to ensure
-        // the time scale is normal when we come back.
-        Time.timeScale = 1f;
-
-        // Ensure the cursor is unlocked and visible before going to the main menu.
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        GameSceneManager.Instance.LoadMainMenu();
-    }
-
     public void OnSettingsButtonPressed()
     {
-        // Create or reuse settings panel
-        // Only create a new settings panel if one isn't already active.
-        if (_activeSettingsInstance == null)
+        Debug.Log($"PauseManager: OnSettingsButtonPressed called in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+        
+        if (uiManager != null)
         {
-            _activeSettingsInstance = Instantiate(settingsPanelPrefab, canvas.transform);
+            uiManager.OnSettingsButtonPressed();
         }
+        else
+        {
+            Debug.LogError("PauseManager: UIManager is null! Cannot open settings.");
+        }
+    }
+    
+    /// <summary>
+    /// Called when the "Quit to Main Menu" button is clicked.
+    /// </summary>
+    public void OnQuitToMainMenuButtonPressed()
+    {
+        Debug.Log($"PauseManager: OnQuitToMainMenuButtonPressed called in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+        
+        if (uiManager != null)
+        {
+            uiManager.QuitToMainMenu();
+        }
+        else
+        {
+            Debug.LogError("PauseManager: UIManager is null! Cannot quit to main menu.");
+        }
+    }
+    
+    /// <summary>
+    /// Called when the "Quit Game" button is clicked.
+    /// </summary>
+    public void OnQuitGameButtonPressed()
+    {
+        Debug.Log($"PauseManager: OnQuitGameButtonPressed called in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+        
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
+    }
+    
+    [ContextMenu("Test Resume Button")]
+    public void TestResumeButton()
+    {
+        Debug.Log("PauseManager: Testing resume button...");
+        OnResumeButtonPressed();
+    }
+    
+    [ContextMenu("Test Settings Button")]
+    public void TestSettingsButton()
+    {
+        Debug.Log("PauseManager: Testing settings button...");
+        OnSettingsButtonPressed();
+    }
+    
+    [ContextMenu("Test Quit to Main Menu Button")]
+    public void TestQuitToMainMenuButton()
+    {
+        Debug.Log("PauseManager: Testing quit to main menu button...");
+        OnQuitToMainMenuButtonPressed();
+    }
+    
+    [ContextMenu("Check Button Connections")]
+    public void CheckButtonConnections()
+    {
+        DebugButtonSetup();
+    }
+    
+    [ContextMenu("Test UIManager Connection")]
+    public void TestUIManagerConnection()
+    {
+        Debug.Log("=== PauseManager UIManager Connection Test ===");
+        
+        if (uiManager == null)
+        {
+            Debug.LogError("❌ UIManager reference is null!");
+            
+            // Try to get it again
+            uiManager = UIManager.Instance;
+            if (uiManager == null)
+            {
+                Debug.LogError("❌ UIManager.Instance is also null!");
+            }
+            else
+            {
+                Debug.Log("✅ Successfully reconnected to UIManager.Instance");
+            }
+        }
+        else
+        {
+            Debug.Log("✅ UIManager reference is valid");
+            Debug.Log($"UIManager GameObject: {uiManager.gameObject.name}");
+            Debug.Log($"UIManager is paused: {uiManager.IsPaused()}");
+        }
+        
+        Debug.Log("=== Connection Test Complete ===");
+    }
+    
+    [ContextMenu("Test All Pause Menu Functions")]
+    public void TestAllPauseMenuFunctions()
+    {
+        Debug.Log("=== Testing All Pause Menu Functions ===");
+        
+        // Test each button function
+        OnResumeButtonPressed();
+        OnSettingsButtonPressed();
+        OnQuitToMainMenuButtonPressed();
+        OnQuitGameButtonPressed();
+        
+        Debug.Log("=== All Functions Tested ===");
+    }
+    
+    [ContextMenu("Test Button Interactions")]
+    public void TestButtonInteractions()
+    {
+        Debug.Log("=== TESTING BUTTON INTERACTIONS ===");
+        
+        Button[] buttons = GetComponentsInChildren<Button>();
+        Debug.Log($"Found {buttons.Length} buttons to test");
+        
+        foreach (Button button in buttons)
+        {
+            Debug.Log($"Button '{button.name}':");
+            Debug.Log($"  - Interactable: {button.interactable}");
+            Debug.Log($"  - Enabled: {button.enabled}");
+            Debug.Log($"  - GameObject Active: {button.gameObject.activeInHierarchy}");
+            Debug.Log($"  - OnClick Events Count: {button.onClick.GetPersistentEventCount()}");
+            
+            // Test if button can be clicked programmatically
+            if (button.interactable && button.enabled && button.gameObject.activeInHierarchy)
+            {
+                Debug.Log($"  - ✅ Button appears clickable");
+            }
+            else
+            {
+                Debug.Log($"  - ❌ Button is NOT clickable");
+            }
+        }
+        
+        // Test EventSystem
+        if (EventSystem.current != null)
+        {
+            Debug.Log($"EventSystem.current: {EventSystem.current.name}");
+            Debug.Log($"EventSystem enabled: {EventSystem.current.enabled}");
+        }
+        else
+        {
+            Debug.LogError("EventSystem.current is null!");
+        }
+        
+        Debug.Log("=== BUTTON INTERACTION TEST COMPLETE ===");
+    }
+    
+    [ContextMenu("Force Reconnect to UIManager")]
+    public void ForceReconnectToUIManager()
+    {
+        Debug.Log("=== FORCING UIMANAGER RECONNECTION ===");
+        
+        // Force reconnection
+        uiManager = UIManager.Instance;
+        
+        if (uiManager == null)
+        {
+            Debug.LogError("❌ UIManager.Instance is still null after force reconnect!");
+        }
+        else
+        {
+            Debug.Log("✅ Successfully reconnected to UIManager.Instance");
+            Debug.Log($"UIManager GameObject: {uiManager.gameObject.name}");
+        }
+        
+        Debug.Log("=== RECONNECTION COMPLETE ===");
     }
 }

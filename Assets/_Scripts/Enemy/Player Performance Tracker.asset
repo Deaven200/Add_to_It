@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c1786c7ff93a8448b77db86e113243f, type: 3}
+  m_Name: Player Performance Tracker
+  m_EditorClassIdentifier: 
+  averageWaveClearTime: 30
+  averagePlayerHealth: 100
+  averageDamageTaken: 0
+  averageKillsPerMinute: 10
+  averageAccuracy: 0.7
+  healthScalingMultiplier: 1
+  speedScalingMultiplier: 1
+  damageScalingMultiplier: 1
+  spawnRateMultiplier: 1
+  waveClearTimes: []
+  playerHealthHistory: []
+  damageTakenHistory: []
+  killsPerMinuteHistory: []
+  historySize: 10
+  difficultyAdjustmentSpeed: 0.2

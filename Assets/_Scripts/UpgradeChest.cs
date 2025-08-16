@@ -165,9 +165,8 @@ public class UpgradeChest : MonoBehaviour
                 audioSource.PlayOneShot(openSound);
             }
             
-            // Open the upgrade manager
+            // Open the upgrade manager (PauseGame is now called inside OnUpgradeButtonPressed)
             upgradeManager.OnUpgradeButtonPressed(this);
-            upgradeManager.PauseGame();
             
             // Disable interaction after use
             canInteract = false;

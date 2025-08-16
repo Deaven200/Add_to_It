@@ -192,6 +192,9 @@ public class TerrainGenerator : MonoBehaviour
         
         // Apply mesh to chunk
         chunk.ApplyTerrainMesh(mesh);
+        
+        // Ensure proper collision setup for NavMesh
+        SetupCollisionForNavMesh(chunk);
     }
     
     void GenerateFeatures(Chunk chunk, Vector2Int chunkPosition)
@@ -335,5 +338,52 @@ public class TerrainGenerator : MonoBehaviour
         rockDensityVariation = Random.Range(1f - variationRange, 1f + variationRange);
         
         // Debug.Log($"Feature generation randomized - Tree variation: {treeDensityVariation:F2}, Rock variation: {rockDensityVariation:F2}");
+    }
+    
+    /// <summary>
+    /// Ensure proper collision setup for NavMesh generation
+    /// </summary>
+    void SetupCollisionForNavMesh(Chunk chunk)
+    {
+        try
+        {
+            // Ensure the chunk has a MeshCollider
+            MeshCollider meshCollider = chunk.GetComponent<MeshCollider>();
+            if (meshCollider == null)
+            {
+                meshCollider = chunk.gameObject.AddComponent<MeshCollider>();
+            }
+            
+            // Make sure the collider is properly configured
+            meshCollider.sharedMesh = chunk.GetComponent<MeshFilter>()?.sharedMesh;
+            meshCollider.convex = false; // Keep false for terrain
+            
+            // Ensure the chunk is on a layer that NavMesh can see
+            if (chunk.gameObject.layer == LayerMask.NameToLayer("Ignore Raycast"))
+            {
+                chunk.gameObject.layer = LayerMask.NameToLayer("Default");
+            }
+            
+            // Add a small delay to ensure the collider is properly set up
+            // This helps with NavMesh generation timing
+            chunk.StartCoroutine(DelayedColliderSetup(chunk));
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error setting up collision for NavMesh: {e.Message}");
+        }
+    }
+    
+    System.Collections.IEnumerator DelayedColliderSetup(Chunk chunk)
+    {
+        yield return new WaitForEndOfFrame();
+        
+        // Force collider update
+        MeshCollider meshCollider = chunk.GetComponent<MeshCollider>();
+        if (meshCollider != null && meshCollider.sharedMesh != null)
+        {
+            meshCollider.enabled = false;
+            meshCollider.enabled = true;
+        }
     }
 }
