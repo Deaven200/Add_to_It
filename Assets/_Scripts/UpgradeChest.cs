@@ -24,6 +24,7 @@ public class UpgradeChest : MonoBehaviour
     
     private bool playerInRange = false;
     private bool isOpened = false;
+    private bool canReopen = true; // New: Allow chest to be reopened
     private Transform playerTransform;
     
     void Start()
@@ -60,8 +61,8 @@ public class UpgradeChest : MonoBehaviour
     
     void Update()
     {
-        // Don't process if already opened
-        if (isOpened) return;
+        // Don't process if already opened and can't reopen
+        if (isOpened && !canReopen) return;
         
         // Check distance to player for range-based interaction
         if (playerTransform != null && canInteract)
@@ -148,7 +149,7 @@ public class UpgradeChest : MonoBehaviour
     
     void OpenUpgradeManager()
     {
-        if (upgradeManager != null && !isOpened)
+        if (upgradeManager != null && (!isOpened || canReopen))
         {
             // Mark as opened
             isOpened = true;
@@ -168,8 +169,8 @@ public class UpgradeChest : MonoBehaviour
             // Open the upgrade manager (PauseGame is now called inside OnUpgradeButtonPressed)
             upgradeManager.OnUpgradeButtonPressed(this);
             
-            // Disable interaction after use
-            canInteract = false;
+            // Don't disable interaction - allow reopening
+            // canInteract = false;
             
             // Upgrade chest opened successfully
         }
@@ -198,6 +199,38 @@ public class UpgradeChest : MonoBehaviour
         if (chestRenderer != null && normalMaterial != null)
         {
             chestRenderer.material = normalMaterial;
+        }
+    }
+    
+    // Method to close chest (called from UpgradeManager)
+    public void CloseChest()
+    {
+        // Play close sound
+        if (audioSource != null && closeSound != null)
+        {
+            audioSource.PlayOneShot(closeSound);
+        }
+        
+        // Change material back to normal state
+        if (chestRenderer != null && normalMaterial != null)
+        {
+            chestRenderer.material = normalMaterial;
+        }
+        
+        // Allow reopening
+        canReopen = true;
+    }
+    
+    // Method to permanently close chest (when upgrade is selected)
+    public void PermanentlyCloseChest()
+    {
+        canReopen = false;
+        canInteract = false;
+        
+        // Change material to opened state permanently
+        if (chestRenderer != null && openedMaterial != null)
+        {
+            chestRenderer.material = openedMaterial;
         }
     }
     

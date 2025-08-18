@@ -33,26 +33,33 @@ public class WeaponStation : MonoBehaviour
             }
         }
         
-        // Try to find the player
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null)
-        {
-            playerTransform = player.transform;
-        }
-        else
-        {
-            Debug.LogError("WeaponStation: No GameObject with 'Player' tag found! Make sure your player has the 'Player' tag.");
-        }
-        
         // Set initial material
         if (stationRenderer != null && normalMaterial != null)
         {
             stationRenderer.material = normalMaterial;
         }
+        
+        // Don't look for player immediately - wait until it's needed
+        // The player will be found when they get close enough to interact
     }
     
     void Update()
     {
+        // Find player if we don't have a reference yet
+        if (playerTransform == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                playerTransform = player.transform;
+            }
+            else
+            {
+                // No player found yet, don't do anything
+                return;
+            }
+        }
+        
         // Check distance to player for range-based interaction
         if (playerTransform != null && canInteract)
         {

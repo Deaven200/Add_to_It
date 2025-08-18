@@ -2818,6 +2818,8 @@ GameObject:
   - component: {fileID: 334254216260812211}
   - component: {fileID: 7643413637473965969}
   - component: {fileID: 8707851714852505664}
+  - component: {fileID: 5398651922368600951}
+  - component: {fileID: 3056888038373366767}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -3108,6 +3110,13 @@ MonoBehaviour:
   upgradeGenerator: {fileID: 0}
   baseUpgradesToShow: 3
   maxUpgradesToShow: 9
+  enableRerollCost: 1
+  baseRerollCost: 5
+  costIncreasesWithWaves: 1
+  costIncreasePerWave: 5
+  costIncreasesWithTime: 1
+  costIncreasePerMinute: 5
+  maxRerollCost: 500
   upgradePanelPrefab: {fileID: 6168845045667551694, guid: c098424dcb1a5c040b6fe237a9e51258, type: 3}
   upgradeCardPrefab: {fileID: 6754978597948061836, guid: 3f1c7a1829c98b14ab3276bd3aec8bb2, type: 3}
   canvas: {fileID: 3652026123417048549}
@@ -3192,14 +3201,57 @@ MonoBehaviour:
   enemyLayerMask:
     serializedVersion: 2
     m_Bits: 1
-  coinLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
   visualOffset: {x: 0, y: 0, z: 0}
   cylinderHeight: 10
   centerOnPlayer: 1
   coinMagnetMaterial: {fileID: 2100000, guid: af25ec031defbbe41bf20fb7a17e6f28, type: 2}
   slowAuraMaterial: {fileID: 0}
+--- !u!114 &5398651922368600951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5974432704305552662}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 482833dc9aaa93849b79a8d3ef444296, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  auraType: 0
+  radius: 3
+  targetLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  showVisualEffect: 1
+  startActive: 0
+  pulseSpeed: 1
+  pulseIntensity: 0.2
+  orbitingPrefab: {fileID: 0}
+  orbitSpeed: 30
+  randomizeStartPositions: 1
+--- !u!114 &3056888038373366767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5974432704305552662}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78ea622667b98984797dcf93096baf3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  auraSystem: {fileID: 0}
+  coinPrefab: {fileID: 9174215519428096625, guid: 660994b819004214b96fb24547e921ea, type: 3}
+  slowAuraPrefab: {fileID: 0}
+  defaultPrefab: {fileID: 0}
+  globalOrbitSpeed: 30
+  randomizePositions: 1
+  globalTransparency: 0.2
+  globalGlow: 0.5
+  applyVisualSettingsToAll: 1
+  showDebugInfo: 1
 --- !u!1 &6359589723097930941
 GameObject:
   m_ObjectHideFlags: 0

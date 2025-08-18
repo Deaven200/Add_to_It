@@ -10,6 +10,15 @@ public class UpgradeManager : MonoBehaviour
     [SerializeField] private int baseUpgradesToShow = 3;
     [SerializeField] private int maxUpgradesToShow = 9;
     
+    [Header("Reroll Cost Settings")]
+    [SerializeField] private bool enableRerollCost = true;
+    [SerializeField] private int baseRerollCost = 50;
+    [SerializeField] private bool costIncreasesWithWaves = true;
+    [SerializeField] private int costIncreasePerWave = 10;
+    [SerializeField] private bool costIncreasesWithTime = true;
+    [SerializeField] private int costIncreasePerMinute = 5;
+    [SerializeField] private int maxRerollCost = 500; // Cap the maximum cost
+    
     [Header("UI References")]
     [SerializeField] private GameObject upgradePanelPrefab;
     [SerializeField] private GameObject upgradeCardPrefab;
@@ -20,8 +29,15 @@ public class UpgradeManager : MonoBehaviour
     private UpgradeChest _currentChest; // Reference to the chest that opened this menu
     private List<UpgradeData> _currentUpgrades = new List<UpgradeData>();
     
+    // Store upgrades for each chest so they remain the same when reopening
+    private Dictionary<UpgradeChest, List<UpgradeData>> _chestUpgrades = new Dictionary<UpgradeChest, List<UpgradeData>>();
+    
     // Track upgrade options bonus
     private int upgradeOptionsBonus = 0;
+    
+    // Reroll cost tracking
+    private float gameStartTime;
+    private int currentWave = 0;
 
     public bool isPaused = false;
     
@@ -44,6 +60,9 @@ public class UpgradeManager : MonoBehaviour
                 upgradeGenerator = generatorGO.AddComponent<RandomUpgradeGenerator>();
             }
         }
+        
+        // Initialize game start time for reroll cost calculation
+        gameStartTime = Time.time;
     }
     
     void EnsureEventSystemExists()
@@ -102,18 +121,34 @@ public class UpgradeManager : MonoBehaviour
     {
         _activeUpgradeInstance.SetActive(true);
 
-        // Calculate how many upgrades to show (base + bonus, capped at max)
-        int upgradesToShow = Mathf.Min(baseUpgradesToShow + upgradeOptionsBonus, maxUpgradesToShow);
-        
-        // Generate random upgrades - the new clean generator handles randomness internally
-        if (upgradeGenerator != null)
+        // Check if this chest already has upgrades stored
+        if (_currentChest != null && _chestUpgrades.ContainsKey(_currentChest))
         {
-            _currentUpgrades = upgradeGenerator.GenerateUniqueUpgrades(upgradesToShow);
+            // Use stored upgrades for this chest
+            _currentUpgrades = new List<UpgradeData>(_chestUpgrades[_currentChest]);
         }
         else
         {
-            Debug.LogError("[UPGRADE MANAGER] No upgrade generator found!");
-            _currentUpgrades = new List<UpgradeData>();
+            // Generate new upgrades for this chest
+            // Calculate how many upgrades to show (base + bonus, capped at max)
+            int upgradesToShow = Mathf.Min(baseUpgradesToShow + upgradeOptionsBonus, maxUpgradesToShow);
+            
+            // Generate random upgrades - the new clean generator handles randomness internally
+            if (upgradeGenerator != null)
+            {
+                _currentUpgrades = upgradeGenerator.GenerateUniqueUpgrades(upgradesToShow);
+                
+                // Store the upgrades for this chest
+                if (_currentChest != null)
+                {
+                    _chestUpgrades[_currentChest] = new List<UpgradeData>(_currentUpgrades);
+                }
+            }
+            else
+            {
+                Debug.LogError("[UPGRADE MANAGER] No upgrade generator found!");
+                _currentUpgrades = new List<UpgradeData>();
+            }
         }
 
         // Clear any existing cards first
@@ -168,7 +203,7 @@ public class UpgradeManager : MonoBehaviour
         // Apply the upgrade based on its type
         ApplyUpgrade(upgrade);
         
-        // Close the menu and remove the chest
+        // Close the menu and permanently close the chest
         ResumeGame();
         
         // Destroy the upgrade panel to ensure fresh generation next time
@@ -179,12 +214,161 @@ public class UpgradeManager : MonoBehaviour
             _buttonContainerInstance = null;
         }
         
-        // Remove the chest that opened this menu
+        // Permanently close and destroy the chest that opened this menu
         if (_currentChest != null)
         {
+            _currentChest.PermanentlyCloseChest();
+            // Remove stored upgrades for this chest since it's permanently closed
+            _chestUpgrades.Remove(_currentChest);
+            // Destroy the chest GameObject
             Destroy(_currentChest.gameObject);
             _currentChest = null;
         }
+    }
+    
+    // New method to close chest without selecting an upgrade
+    public void CloseChest()
+    {
+        // Close the menu
+        ResumeGame();
+        
+        // Destroy the upgrade panel to ensure fresh generation next time
+        if (_activeUpgradeInstance != null)
+        {
+            Destroy(_activeUpgradeInstance);
+            _activeUpgradeInstance = null;
+            _buttonContainerInstance = null;
+        }
+        
+        // Close the chest (allows reopening)
+        if (_currentChest != null)
+        {
+            _currentChest.CloseChest();
+            _currentChest = null;
+        }
+    }
+    
+    // New method to reroll upgrades
+    public void RerollUpgrades()
+    {
+        // Check if reroll cost is enabled
+        if (enableRerollCost)
+        {
+            int currentRerollCost = CalculateRerollCost();
+            
+            // Find player's money component
+            PlayerMoney playerMoney = FindObjectOfType<PlayerMoney>();
+            if (playerMoney != null)
+            {
+                // Check if player has enough money
+                if (playerMoney.GetMoney() >= currentRerollCost)
+                {
+                    // Deduct money and reroll
+                    playerMoney.SpendMoney(currentRerollCost);
+                    GenerateNewUpgradesForCurrentChest();
+                    ShowUpgradeChoices();
+                    Debug.Log($"Rerolled upgrades for {currentRerollCost} money. New cost: {CalculateRerollCost()}");
+                }
+                else
+                {
+                    Debug.Log($"Not enough money to reroll! Cost: {currentRerollCost}, Available: {playerMoney.GetMoney()}");
+                    // You could show a UI message here
+                    return;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("PlayerMoney component not found! Rerolling without cost.");
+                GenerateNewUpgradesForCurrentChest();
+                ShowUpgradeChoices();
+            }
+        }
+        else
+        {
+            // Reroll is free
+            GenerateNewUpgradesForCurrentChest();
+            ShowUpgradeChoices();
+        }
+    }
+    
+    // Helper method to generate new upgrades for the current chest
+    private void GenerateNewUpgradesForCurrentChest()
+    {
+        if (_currentChest == null) return;
+        
+        // Calculate how many upgrades to show (base + bonus, capped at max)
+        int upgradesToShow = Mathf.Min(baseUpgradesToShow + upgradeOptionsBonus, maxUpgradesToShow);
+        
+        // Generate new random upgrades
+        if (upgradeGenerator != null)
+        {
+            List<UpgradeData> newUpgrades = upgradeGenerator.GenerateUniqueUpgrades(upgradesToShow);
+            
+            // Store the new upgrades for this chest
+            _chestUpgrades[_currentChest] = new List<UpgradeData>(newUpgrades);
+        }
+    }
+    
+    // Calculate current reroll cost based on settings
+    public int CalculateRerollCost()
+    {
+        if (!enableRerollCost)
+            return 0;
+            
+        int cost = baseRerollCost;
+        
+        // Add wave-based cost increase
+        if (costIncreasesWithWaves)
+        {
+            cost += currentWave * costIncreasePerWave;
+        }
+        
+        // Add time-based cost increase
+        if (costIncreasesWithTime)
+        {
+            float minutesPassed = (Time.time - gameStartTime) / 60f;
+            cost += Mathf.FloorToInt(minutesPassed) * costIncreasePerMinute;
+        }
+        
+        // Cap the maximum cost
+        return Mathf.Min(cost, maxRerollCost);
+    }
+    
+    // Method to update current wave (call this when waves change)
+    public void SetCurrentWave(int wave)
+    {
+        currentWave = wave;
+    }
+    
+    // Method to get current reroll cost for UI display
+    public int GetCurrentRerollCost()
+    {
+        return CalculateRerollCost();
+    }
+    
+    // Method to check if player can afford reroll
+    public bool CanAffordReroll()
+    {
+        if (!enableRerollCost)
+            return true;
+            
+        PlayerMoney playerMoney = FindObjectOfType<PlayerMoney>();
+        if (playerMoney != null)
+        {
+            return playerMoney.GetMoney() >= CalculateRerollCost();
+        }
+        return false;
+    }
+    
+    // Getter methods for testing and debugging
+    public int GetCurrentWave()
+    {
+        return currentWave;
+    }
+    
+    public float GetGameStartTime()
+    {
+        return gameStartTime;
     }
     
     private void ApplyUpgrade(UpgradeData upgrade)

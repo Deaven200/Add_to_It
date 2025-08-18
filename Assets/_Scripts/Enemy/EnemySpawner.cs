@@ -46,6 +46,13 @@ public class EnemySpawner : MonoBehaviour
     {
         waveInProgress = true;
         currentWave++;
+        
+        // Notify UpgradeManager of wave change for reroll cost calculation
+        UpgradeManager upgradeManager = FindObjectOfType<UpgradeManager>();
+        if (upgradeManager != null)
+        {
+            upgradeManager.SetCurrentWave(currentWave);
+        }
 
         int enemiesToSpawn = startingEnemiesPerWave + (increasePerWave * (currentWave - 1));
 
