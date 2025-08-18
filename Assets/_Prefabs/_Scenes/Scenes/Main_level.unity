@@ -284,13 +284,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   availableEnemyTypes:
   - {fileID: 11400000, guid: 76f855bc2b70ec343a5613ded0c26951, type: 2}
-  availableSpecialWaves:
-  - {fileID: 11400000, guid: 177def3bc2f4f4e4f95af156eed6e004, type: 2}
+  availableSpecialWaves: []
   basePointBudget: 100
   pointBudgetIncreasePerWave: 20
   timeBetweenWaves: 5
   minSpawnDistance: 50
   maxSpawnDistance: 75
+  bossWaveInterval: 5
+  bossWaveCount: 1
+  enableBossWaves: 1
+  bossEnemyTypes: []
   performanceTracker: {fileID: 11400000, guid: df799831af9f86e47b774b57aecbe201, type: 2}
   OnWaveStart:
     m_PersistentCalls:
@@ -303,19 +306,25 @@ MonoBehaviour:
       m_Calls: []
   OnSpecialWaveStart:
     m_PersistentCalls:
+      m_Calls: []
+  OnBossWaveStart:
+    m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 11400000, guid: 177def3bc2f4f4e4f95af156eed6e004, type: 2}
-        m_TargetAssemblyTypeName: UnityEngine.Object, UnityEngine
-        m_MethodName: set_name
-        m_Mode: 5
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  OnBossWaveComplete:
+    m_PersistentCalls:
+      m_Calls: []
   showDebugInfo: 1
   pauseSpawning: 0
 --- !u!4 &658449908
@@ -436,6 +445,62 @@ MonoBehaviour:
   targetScene: Main_level
   showFreezeMessage: 1
   debugMode: 0
+--- !u!1 &1916483604
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1916483606}
+  - component: {fileID: 1916483605}
+  m_Layer: 0
+  m_Name: fpsoptimizer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1916483605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1916483604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 758ca143a1beb0441ab8b80acc7b1043, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableFPSOptimization: 1
+  fpsUpdateInterval: 0.5
+  fpsSampleSize: 30
+  minFPSThreshold: 30
+  resumeFPSThreshold: 45
+  criticalFPSThreshold: 20
+  enableEmergencyOptimization: 1
+  emergencyOptimizationDuration: 5
+  reduceRenderDistanceOnLowFPS: 1
+  emergencyRenderDistance: 4
+  showFPSDebug: 1
+  logOptimizationEvents: 1
+--- !u!4 &1916483606
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1916483604}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -185.9661, y: 123.41502, z: -22.191162}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1930109597
 GameObject:
   m_ObjectHideFlags: 0
@@ -540,6 +605,8 @@ MonoBehaviour:
   useAsyncGeneration: 1
   chunksPerFrame: 2
   maxGenerationTime: 0.016
+  enableFPSOptimization: 1
+  fpsOptimizer: {fileID: 1916483605}
   terrainSettings: {fileID: 11400000, guid: f608373aa94d44d4aa7f74de2b8eb9a3, type: 2}
   enableFog: 1
   fogDistance: 100
@@ -581,3 +648,4 @@ SceneRoots:
   - {fileID: 1691438953}
   - {fileID: 658449908}
   - {fileID: 1930109599}
+  - {fileID: 1916483606}

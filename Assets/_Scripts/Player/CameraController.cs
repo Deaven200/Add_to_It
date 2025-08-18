@@ -39,8 +39,35 @@ public class CameraController : MonoBehaviour
             targetCameraPosition = isFirstPerson ? firstPersonOffset : thirdPersonOffset;
             mainCamera.localPosition = targetCameraPosition;
         }
+    }
+    
+    /// <summary>
+    /// Initialize the camera controller (called by PlayerSpawner)
+    /// </summary>
+    public void Initialize()
+    {
+        // Lock cursor
+        Cursor.lockState = CursorLockMode.Locked;
         
-
+        // Reset camera position
+        if (mainCamera != null)
+        {
+            targetCameraPosition = isFirstPerson ? firstPersonOffset : thirdPersonOffset;
+            mainCamera.localPosition = targetCameraPosition;
+        }
+        
+        // Reset pitch
+        pitch = 0f;
+        if (cameraPivot != null)
+        {
+            cameraPivot.localRotation = Quaternion.identity;
+        }
+        
+        // Find upgrade manager if not already found
+        if (upgradeManager == null)
+        {
+            upgradeManager = FindObjectOfType<UpgradeManager>();
+        }
     }
 
     void Update()

@@ -25,6 +25,14 @@ public class DynamicEnemySpawner : MonoBehaviour
     [Range(10f, 100f)]
     public float maxSpawnDistance = 30f;
     
+    [Header("Boss Wave System")]
+    [Range(3, 15)]
+    public int bossWaveInterval = 5; // Every X waves, a boss wave occurs
+    [Range(1, 5)]
+    public int bossWaveCount = 1; // How many boss waves to spawn
+    public bool enableBossWaves = true;
+    public EnemyType[] bossEnemyTypes; // Specific boss enemies to use
+    
     [Header("Performance Tracking")]
     public PlayerPerformanceTracker performanceTracker;
     
@@ -33,6 +41,8 @@ public class DynamicEnemySpawner : MonoBehaviour
     public UnityEvent<int> OnWaveComplete;
     public UnityEvent<string> OnPhaseMessage;
     public UnityEvent<SpecialWave> OnSpecialWaveStart;
+    public UnityEvent<int> OnBossWaveStart; // New boss wave event
+    public UnityEvent OnBossWaveComplete; // New boss wave complete event
     
     [Header("Debug")]
     public bool showDebugInfo = true;
@@ -47,6 +57,11 @@ public class DynamicEnemySpawner : MonoBehaviour
     private float totalDamageTakenThisWave = 0f;
     private int killsThisWave = 0;
     private float waveKillStartTime;
+    
+    // Boss wave tracking
+    private bool isBossWave = false;
+    private int bossWavesSpawned = 0;
+    private List<GameObject> bossEnemies = new List<GameObject>();
     
     // Performance tracking
     private PlayerHealth playerHealth;
@@ -91,6 +106,7 @@ public class DynamicEnemySpawner : MonoBehaviour
         
         // Clean up dead enemies
         activeEnemies.RemoveAll(enemy => enemy == null);
+        bossEnemies.RemoveAll(enemy => enemy == null);
         
         // Update wave progress
         if (waveInProgress)
@@ -117,19 +133,39 @@ public class DynamicEnemySpawner : MonoBehaviour
         totalDamageTakenThisWave = 0f;
         killsThisWave = 0;
         
+        // Check if this should be a boss wave
+        isBossWave = ShouldBeBossWave();
+        
         // Calculate point budget for this wave
         currentPointBudget = basePointBudget + (pointBudgetIncreasePerWave * (currentWave - 1));
         
         // Apply performance-based adjustments
         currentPointBudget = Mathf.RoundToInt(currentPointBudget * performanceTracker.spawnRateMultiplier);
         
-        // Decide if this should be a special wave
-        currentSpecialWave = ShouldUseSpecialWave() ? SelectSpecialWave() : null;
-        
-        if (currentSpecialWave != null)
+        // Boost point budget for boss waves
+        if (isBossWave)
         {
-            OnSpecialWaveStart?.Invoke(currentSpecialWave);
-            Debug.Log($"Starting Special Wave: {currentSpecialWave.waveName}");
+            currentPointBudget = Mathf.RoundToInt(currentPointBudget * 1.5f);
+            bossWavesSpawned++;
+            OnBossWaveStart?.Invoke(currentWave);
+            Debug.Log($"BOSS WAVE {currentWave} STARTING! Boss waves spawned: {bossWavesSpawned}");
+        }
+        
+        // Decide if this should be a special wave (but not if it's already a boss wave)
+        if (!isBossWave)
+        {
+            currentSpecialWave = ShouldUseSpecialWave() ? SelectSpecialWave() : null;
+            
+            if (currentSpecialWave != null)
+            {
+                OnSpecialWaveStart?.Invoke(currentSpecialWave);
+                Debug.Log($"Starting Special Wave: {currentSpecialWave.waveName}");
+            }
+        }
+        else
+        {
+            // Boss waves use their own special wave logic
+            currentSpecialWave = null;
         }
         
         OnWaveStart?.Invoke(currentWave);
@@ -139,6 +175,18 @@ public class DynamicEnemySpawner : MonoBehaviour
         StartPhase();
         
         yield return null;
+    }
+    
+    /// <summary>
+    /// Determine if this wave should be a boss wave
+    /// </summary>
+    private bool ShouldBeBossWave()
+    {
+        if (!enableBossWaves) return false;
+        if (bossEnemyTypes == null || bossEnemyTypes.Length == 0) return false;
+        
+        // Check if this wave is a boss wave interval
+        return currentWave % bossWaveInterval == 0;
     }
     
     /// <summary>
@@ -203,7 +251,12 @@ public class DynamicEnemySpawner : MonoBehaviour
     /// </summary>
     private void StartPhase()
     {
-        if (currentSpecialWave != null && currentSpecialWave.phases != null && currentPhaseIndex < currentSpecialWave.phases.Length)
+        if (isBossWave)
+        {
+            // Create a boss phase
+            currentPhase = CreateBossPhase();
+        }
+        else if (currentSpecialWave != null && currentSpecialWave.phases != null && currentPhaseIndex < currentSpecialWave.phases.Length)
         {
             currentPhase = currentSpecialWave.phases[currentPhaseIndex];
         }
@@ -224,6 +277,26 @@ public class DynamicEnemySpawner : MonoBehaviour
         }
         
         Debug.Log($"Starting Phase: {currentPhase.phaseName} (Duration: {currentPhase.duration}s)");
+    }
+    
+    /// <summary>
+    /// Create a boss phase for boss waves
+    /// </summary>
+    private WavePhase CreateBossPhase()
+    {
+        WavePhase phase = new WavePhase();
+        phase.phaseName = $"Boss Phase - Wave {currentWave}";
+        phase.duration = 30f; // Longer duration for boss waves
+        phase.spawnPattern = SpawnPattern.Burst;
+        phase.spawnRate = 0.5f; // Slower spawn rate for bosses
+        phase.maxEnemiesAlive = bossWaveCount;
+        phase.allowedEnemyTypes = bossEnemyTypes;
+        phase.spawnLocations = new SpawnLocation[] { SpawnLocation.Surrounding };
+        phase.minSpawnDistance = minSpawnDistance + 5f; // Bosses spawn further away
+        phase.maxSpawnDistance = maxSpawnDistance + 10f;
+        phase.phaseMessage = $"BOSS WAVE {currentWave}! Prepare for battle!";
+        
+        return phase;
     }
     
     /// <summary>
@@ -349,6 +422,13 @@ public class DynamicEnemySpawner : MonoBehaviour
         // Spawn the enemy
         GameObject enemy = Instantiate(selectedEnemy.enemyPrefab, spawnPosition, Quaternion.identity);
         activeEnemies.Add(enemy);
+        
+        // Track boss enemies separately
+        if (selectedEnemy.isBoss)
+        {
+            bossEnemies.Add(enemy);
+            Debug.Log($"BOSS SPAWNED: {selectedEnemy.enemyName} at {spawnPosition}");
+        }
         
         // Apply enemy stats
         ApplyEnemyStats(enemy, selectedEnemy);
@@ -573,6 +653,14 @@ public class DynamicEnemySpawner : MonoBehaviour
         float killDuration = Time.time - waveKillStartTime;
         float killsPerMinute = killDuration > 0 ? (killsThisWave / killDuration) * 60f : 0f;
         
+        // Handle boss wave completion
+        if (isBossWave)
+        {
+            OnBossWaveComplete?.Invoke();
+            Debug.Log($"BOSS WAVE {currentWave} COMPLETED! All bosses defeated!");
+            isBossWave = false;
+        }
+        
         // Record performance
         if (playerHealth != null)
         {
@@ -621,7 +709,12 @@ public class DynamicEnemySpawner : MonoBehaviour
         if (!waveInProgress) return $"Wave {currentWave} - Starting...";
         
         string info = $"Wave {currentWave}";
-        if (currentSpecialWave != null)
+        
+        if (isBossWave)
+        {
+            info += " - BOSS WAVE!";
+        }
+        else if (currentSpecialWave != null)
         {
             info += $" - {currentSpecialWave.waveName}";
         }
@@ -634,17 +727,57 @@ public class DynamicEnemySpawner : MonoBehaviour
         
         info += $"\nEnemies: {activeEnemies.Count} | Points: {currentPointBudget}";
         
+        if (isBossWave && bossEnemies.Count > 0)
+        {
+            info += $"\nBosses: {bossEnemies.Count} remaining";
+        }
+        
         return info;
+    }
+    
+    /// <summary>
+    /// Get the next boss wave number
+    /// </summary>
+    public int GetNextBossWave()
+    {
+        if (!enableBossWaves) return -1;
+        
+        int nextBossWave = ((currentWave / bossWaveInterval) + 1) * bossWaveInterval;
+        return nextBossWave;
+    }
+    
+    /// <summary>
+    /// Check if the current wave is a boss wave
+    /// </summary>
+    public bool IsBossWave()
+    {
+        return isBossWave;
+    }
+    
+    /// <summary>
+    /// Get the number of boss waves completed
+    /// </summary>
+    public int GetBossWavesCompleted()
+    {
+        return bossWavesSpawned;
     }
     
     void OnGUI()
     {
         if (!showDebugInfo) return;
         
-        GUILayout.BeginArea(new Rect(10, 10, 300, 200));
+        GUILayout.BeginArea(new Rect(10, 10, 300, 250));
         GUILayout.Label(GetWaveInfo());
         GUILayout.Label($"Performance: {performanceTracker.GetOverallPerformance():F2}");
         GUILayout.Label($"Difficulty: {performanceTracker.GetCurrentDifficulty():F2}");
+        
+        if (isBossWave)
+        {
+            GUILayout.Label($"BOSS WAVE ACTIVE!", GUI.skin.box);
+            GUILayout.Label($"Bosses remaining: {bossEnemies.Count}");
+        }
+        
+        GUILayout.Label($"Next boss wave: Wave {GetNextBossWave()}");
         GUILayout.EndArea();
     }
     

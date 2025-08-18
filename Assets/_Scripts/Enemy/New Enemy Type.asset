@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5d175d8d35764843982481018d5cd94, type: 3}
+  m_Name: New Enemy Type
+  m_EditorClassIdentifier: 
+  enemyName: Basic Enemy
+  enemyPrefab: {fileID: 6127347324644487292, guid: 342b9f1dfa91de042ad1a8520623e31f, type: 3}
+  icon: {fileID: 0}
+  spawnCost: 10
+  spawnWeight: 1
+  minWaveToAppear: 1
+  maxWaveToAppear: 50
+  baseHealth: 1
+  baseSpeed: 1
+  baseDamage: 1
+  baseDamageCooldown: 1
+  baseDamageRange: 1.5
+  healthScalingPerWave: 0.1
+  speedScalingPerWave: 0.05
+  damageScalingPerWave: 0.1
+  isArmored: 0
+  isFast: 0
+  isTank: 0
+  isBoss: 0
+  canSpawnInGroups: 1
+  enemyColor: {r: 1, g: 0, b: 0, a: 1}
+  scaleMultiplier: 1
+  hasSpecialDeathEffect: 0

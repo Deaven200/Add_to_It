@@ -691,4 +691,22 @@ public class WeaponManager : MonoBehaviour
             Debug.Log("No weapon currently equipped!");
         }
     }
+
+    /// <summary>
+    /// Initialize the weapon manager (called by PlayerSpawner)
+    /// </summary>
+    public void Initialize()
+    {
+        // Reload weapon if one is equipped
+        if (currentPlayerWeapon != null && currentPlayerWeapon.maxAmmo > 0)
+        {
+            currentAmmo = currentPlayerWeapon.maxAmmo;
+            OnAmmoChanged?.Invoke(currentAmmo, currentPlayerWeapon.maxAmmo);
+        }
+        
+        // Reset fire rate timer
+        nextFireTime = 0f;
+        isReloading = false;
+        reloadTimer = 0f;
+    }
 } 

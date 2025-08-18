@@ -40,12 +40,7 @@ public class UpgradeEntry
                 return "Coin Magnet Aura";
             case UpgradeData.UpgradeType.SlowAura:
                 return "Slow Aura";
-            case UpgradeData.UpgradeType.ShieldAura:
-                return "Shield Aura";
-            case UpgradeData.UpgradeType.DamageAura:
-                return "Damage Aura";
-            case UpgradeData.UpgradeType.HealAura:
-                return "Heal Aura";
+
             default:
                 return upgradeType.ToString();
         }
@@ -63,9 +58,6 @@ public class UpgradeEntry
                 return $"+{totalValue:F1}";
             case UpgradeData.UpgradeType.CoinMagnetAura:
             case UpgradeData.UpgradeType.SlowAura:
-            case UpgradeData.UpgradeType.ShieldAura:
-            case UpgradeData.UpgradeType.DamageAura:
-            case UpgradeData.UpgradeType.HealAura:
                 return $"Radius: {totalValue:F1}";
             default:
                 return $"+{totalValue:F1}";

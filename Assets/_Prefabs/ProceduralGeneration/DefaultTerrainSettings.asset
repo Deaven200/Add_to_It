@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7314254628c9a346bdf1e1b1b3ce034, type: 3}
   m_Name: DefaultTerrainSettings
   m_EditorClassIdentifier: 
-  noiseScale: 54.946068
+  noiseScale: 67.01302
   octaves: 10
   persistence: 0.5
   lacunarity: 2
-  noiseOffset: {x: 2859.2058, y: 8987.8125}
+  noiseOffset: {x: 1122.7832, y: 8512.209}
   randomizeOnStart: 1
   noiseScaleVariation: 0.2
-  maxHeight: 10
+  maxHeight: 30
   minHeight: -2
   heightCurve:
     serializedVersion: 2
@@ -58,7 +58,7 @@ MonoBehaviour:
     roughness: 0.3
   - biomeName: Mountains
     minHeight: 0.6
-    maxHeight: 10
+    maxHeight: 20
     groundColor: {r: 0.06459867, g: 0.1509434, b: 0.03773585, a: 1}
     roughness: 0.8
   enableTrees: 1

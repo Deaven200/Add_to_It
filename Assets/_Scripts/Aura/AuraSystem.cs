@@ -6,7 +6,8 @@ public class AuraSystem : MonoBehaviour
     [Header("Aura Settings")]
     [SerializeField] private float baseAuraRadius = 3f;
     [SerializeField] private LayerMask enemyLayerMask = 1; // Default layer for enemies
-    [SerializeField] private LayerMask coinLayerMask = 1; // Default layer for coins
+    [Tooltip("Set this to the layer your enemies are on. If enemies use the 'Enemy' tag, this can stay as Default.")]
+    // Note: Coin magnet aura uses tag-based detection ("Money"), so layer mask isn't needed for coins
     
     [Header("Visual Positioning")]
     [SerializeField] private Vector3 visualOffset = Vector3.zero; // Offset for visual effects from player center
@@ -16,10 +17,8 @@ public class AuraSystem : MonoBehaviour
     [Header("Visual Effects")]
     [SerializeField] private Material coinMagnetMaterial;
     [SerializeField] private Material slowAuraMaterial;
-    [SerializeField] private Material shieldAuraMaterial;
-    [SerializeField] private Material damageAuraMaterial;
-    [SerializeField] private Material healAuraMaterial;
     
+    // Simple dictionary - one aura per type
     private Dictionary<UpgradeData.UpgradeType, AuraEffect> activeAuras = new Dictionary<UpgradeData.UpgradeType, AuraEffect>();
     private PlayerHealth playerHealth;
     private PlayerMoney playerMoney;
@@ -32,10 +31,36 @@ public class AuraSystem : MonoBehaviour
     
     public void AddAura(UpgradeData.UpgradeType auraType, float value, UpgradeData.Rarity rarity)
     {
-        // Remove existing aura of the same type if it exists
+        // Check if this aura type is supported (only coin magnet and slow auras)
+        if (auraType != UpgradeData.UpgradeType.CoinMagnetAura && auraType != UpgradeData.UpgradeType.SlowAura)
+        {
+            Debug.LogWarning($"Aura type {auraType} is not supported. Only CoinMagnetAura and SlowAura are available.");
+            return;
+        }
+        
+        // If aura already exists, stack the effects by increasing the radius
         if (activeAuras.ContainsKey(auraType))
         {
-            RemoveAura(auraType);
+            AuraEffect existingAura = activeAuras[auraType];
+            if (existingAura != null)
+            {
+                // Calculate new combined radius (additive stacking)
+                float existingRadius = existingAura.GetRadius();
+                float newRadius = CalculateAuraRadius(value, rarity);
+                float combinedRadius = existingRadius + newRadius;
+                
+                // Ensure the combined radius doesn't exceed a reasonable maximum
+                float maxRadius = 20f; // Maximum radius to prevent performance issues
+                combinedRadius = Mathf.Min(combinedRadius, maxRadius);
+                
+                // Update the existing aura with the new combined radius
+                Vector3? visualOffsetParam = centerOnPlayer ? Vector3.zero : visualOffset;
+                LayerMask layerMask = GetLayerMaskForAuraType(auraType);
+                existingAura.Initialize(auraType, combinedRadius, layerMask, visualOffsetParam, cylinderHeight);
+                
+                Debug.Log($"Stacked {auraType} aura. New radius: {combinedRadius} (was {existingRadius} + {newRadius})");
+                return;
+            }
         }
         
         // Calculate aura radius based on value and rarity
@@ -47,7 +72,7 @@ public class AuraSystem : MonoBehaviour
         if (auraEffect != null)
         {
             activeAuras[auraType] = auraEffect;
-            Debug.Log($"Added {auraType} aura with radius {auraRadius}");
+            Debug.Log($"Added {auraType} aura with value {value}, Radius: {auraRadius}");
         }
     }
     
@@ -79,8 +104,13 @@ public class AuraSystem : MonoBehaviour
     
     private float CalculateAuraRadius(float value, UpgradeData.Rarity rarity)
     {
-        float rarityMultiplier = GetRarityMultiplier(rarity);
-        return baseAuraRadius * (value / 5f) * rarityMultiplier; // Normalize value to 5 as baseline
+        // Use value directly as radius, ignoring rarity multiplier
+        float radius = value;
+        
+        // Ensure minimum radius of 1 unit
+        radius = Mathf.Max(radius, 1f);
+        
+        return radius;
     }
     
     private float GetRarityMultiplier(UpgradeData.Rarity rarity)
@@ -122,15 +152,6 @@ public class AuraSystem : MonoBehaviour
             case UpgradeData.UpgradeType.SlowAura:
                 ConfigureSlowAura(auraEffect, radius, visualOffsetParam);
                 break;
-            case UpgradeData.UpgradeType.ShieldAura:
-                ConfigureShieldAura(auraEffect, radius, visualOffsetParam);
-                break;
-            case UpgradeData.UpgradeType.DamageAura:
-                ConfigureDamageAura(auraEffect, radius, visualOffsetParam);
-                break;
-            case UpgradeData.UpgradeType.HealAura:
-                ConfigureHealAura(auraEffect, radius, visualOffsetParam);
-                break;
             default:
                 Debug.LogWarning($"Unknown aura type: {auraType}");
                 Destroy(auraObject);
@@ -142,8 +163,21 @@ public class AuraSystem : MonoBehaviour
     
     private void ConfigureCoinMagnetAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
     {
-        auraEffect.Initialize(UpgradeData.UpgradeType.CoinMagnetAura, radius, coinLayerMask, visualOffset, cylinderHeight);
-        auraEffect.SetMaterial(coinMagnetMaterial);
+        // Coin magnet aura uses tag-based detection, so we pass -1 (all layers)
+        auraEffect.Initialize(UpgradeData.UpgradeType.CoinMagnetAura, radius, -1, visualOffset, cylinderHeight);
+        
+        // Only set material if it's assigned
+        if (coinMagnetMaterial != null)
+        {
+            auraEffect.SetMaterial(coinMagnetMaterial);
+        }
+        else
+        {
+            Debug.LogWarning("CoinMagnetAura material is not assigned in AuraSystem inspector!");
+        }
+        
+        // Try to apply coin prefab from AuraManagerUI immediately
+        TryApplyCoinPrefabFromManager(auraEffect);
         
         // Handle coin attraction when coins enter the aura
         auraEffect.OnAuraTriggerEnter += (collider) => {
@@ -169,7 +203,17 @@ public class AuraSystem : MonoBehaviour
     private void ConfigureSlowAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
     {
         auraEffect.Initialize(UpgradeData.UpgradeType.SlowAura, radius, enemyLayerMask, visualOffset, cylinderHeight);
-        auraEffect.SetMaterial(slowAuraMaterial);
+        
+        // Only set material if it's assigned
+        if (slowAuraMaterial != null)
+        {
+            auraEffect.SetMaterial(slowAuraMaterial);
+        }
+        else
+        {
+            Debug.LogWarning("SlowAura material is not assigned in AuraSystem inspector!");
+        }
+        
         auraEffect.OnAuraTriggerEnter += (collider) => {
             if (collider.CompareTag("Enemy"))
             {
@@ -194,81 +238,11 @@ public class AuraSystem : MonoBehaviour
         };
     }
     
-    private void ConfigureShieldAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
-    {
-        auraEffect.Initialize(UpgradeData.UpgradeType.ShieldAura, radius, enemyLayerMask, visualOffset, cylinderHeight);
-        auraEffect.SetMaterial(shieldAuraMaterial);
-        
-        // Keep shield aura as trigger but use custom enemy blocking logic
-        // This allows bullets and coins to pass through while blocking enemies
-        
-        // Shield aura blocks enemies from passing through
-        auraEffect.OnAuraTriggerEnter += (collider) => {
-            if (collider.CompareTag("Enemy"))
-            {
-                // Push enemy back from the shield
-                Vector3 pushDirection = (collider.transform.position - transform.position).normalized;
-                collider.transform.position += pushDirection * 2f;
-                
-                // If enemy has a NavMeshAgent, stop it temporarily
-                UnityEngine.AI.NavMeshAgent agent = collider.GetComponent<UnityEngine.AI.NavMeshAgent>();
-                if (agent != null)
-                {
-                    agent.isStopped = true;
-                    StartCoroutine(ResumeEnemyMovement(agent, 0.5f));
-                }
-            }
-        };
-        
-        // Shield aura absorbs damage when enemies attack
-        auraEffect.OnAuraTriggerStay += (collider) => {
-            if (collider.CompareTag("Enemy"))
-            {
-                // Check if enemy is attacking (you can modify this based on your enemy attack system)
-                EnemyAttack enemyAttack = collider.GetComponent<EnemyAttack>();
-                if (enemyAttack != null && enemyAttack.IsAttacking())
-                {
-                    // Absorb the damage and reduce shield
-                    float damageToAbsorb = enemyAttack.GetAttackDamage();
-                    AbsorbDamage(damageToAbsorb);
-                    
-                    // Optionally push the enemy back
-                    Vector3 pushDirection = (collider.transform.position - transform.position).normalized;
-                    collider.transform.position += pushDirection * 1f;
-                }
-            }
-        };
-    }
+
     
-    private void ConfigureDamageAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
-    {
-        auraEffect.Initialize(UpgradeData.UpgradeType.DamageAura, radius, enemyLayerMask, visualOffset, cylinderHeight);
-        auraEffect.SetMaterial(damageAuraMaterial);
-        auraEffect.OnAuraTriggerStay += (collider) => {
-            if (collider.CompareTag("Enemy"))
-            {
-                // Deal damage to enemy over time
-                EnemyHealth enemyHealth = collider.GetComponent<EnemyHealth>();
-                if (enemyHealth != null)
-                {
-                    enemyHealth.TakeDamage(1f * Time.deltaTime); // 1 damage per second
-                }
-            }
-        };
-    }
+
     
-    private void ConfigureHealAura(AuraEffect auraEffect, float radius, Vector3? visualOffset = null)
-    {
-        auraEffect.Initialize(UpgradeData.UpgradeType.HealAura, radius, LayerMask.GetMask("Player"), visualOffset, cylinderHeight);
-        auraEffect.SetMaterial(healAuraMaterial);
-        auraEffect.OnAuraTriggerStay += (collider) => {
-            if (collider.CompareTag("Player") && playerHealth != null)
-            {
-                // Heal player over time
-                playerHealth.Heal(1); // Heal 1 health per frame (will be limited by fire rate)
-            }
-        };
-    }
+
     
     // Public methods to check if specific auras are active
     public bool HasAura(UpgradeData.UpgradeType auraType)
@@ -287,9 +261,6 @@ public class AuraSystem : MonoBehaviour
     {
         AddAura(UpgradeData.UpgradeType.CoinMagnetAura, 5f, UpgradeData.Rarity.Common);
         AddAura(UpgradeData.UpgradeType.SlowAura, 5f, UpgradeData.Rarity.Common);
-        AddAura(UpgradeData.UpgradeType.ShieldAura, 5f, UpgradeData.Rarity.Common);
-        AddAura(UpgradeData.UpgradeType.DamageAura, 5f, UpgradeData.Rarity.Common);
-        AddAura(UpgradeData.UpgradeType.HealAura, 5f, UpgradeData.Rarity.Common);
     }
     
     // Coroutine to move coins towards player
@@ -309,44 +280,7 @@ public class AuraSystem : MonoBehaviour
         }
     }
     
-    // Coroutine to resume enemy movement after being blocked by shield
-    private System.Collections.IEnumerator ResumeEnemyMovement(UnityEngine.AI.NavMeshAgent agent, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        if (agent != null)
-        {
-            agent.isStopped = false;
-        }
-    }
-    
-    // Shield damage absorption system
-    private float currentShieldHealth = 100f;
-    private float maxShieldHealth = 100f;
-    
-    private void AbsorbDamage(float damage)
-    {
-        if (currentShieldHealth > 0)
-        {
-            currentShieldHealth -= damage;
-            
-            // If shield is depleted, remove the shield aura
-            if (currentShieldHealth <= 0)
-            {
-                currentShieldHealth = 0;
-                RemoveAura(UpgradeData.UpgradeType.ShieldAura);
-                Debug.Log("Shield Aura depleted and removed!");
-            }
-            else
-            {
-                Debug.Log($"Shield absorbed {damage} damage. Shield health: {currentShieldHealth}/{maxShieldHealth}");
-            }
-        }
-    }
-    
-    // Public methods for shield management
-    public float GetShieldHealth() => currentShieldHealth;
-    public float GetMaxShieldHealth() => maxShieldHealth;
-    public float GetShieldHealthPercentage() => currentShieldHealth / maxShieldHealth;
+
     
     // Public methods for visual positioning
     public void SetVisualOffset(Vector3 offset)
@@ -399,13 +333,9 @@ public class AuraSystem : MonoBehaviour
         switch (auraType)
         {
             case UpgradeData.UpgradeType.CoinMagnetAura:
-                return coinLayerMask;
+                return -1; // Coin magnet uses tag-based detection, -1 represents all layers
             case UpgradeData.UpgradeType.SlowAura:
-            case UpgradeData.UpgradeType.ShieldAura:
-            case UpgradeData.UpgradeType.DamageAura:
                 return enemyLayerMask;
-            case UpgradeData.UpgradeType.HealAura:
-                return LayerMask.GetMask("Player");
             default:
                 return LayerMask.GetMask("Default");
         }
@@ -416,9 +346,144 @@ public class AuraSystem : MonoBehaviour
     public float GetCylinderHeight() => cylinderHeight;
     public bool GetCenterOnPlayer() => centerOnPlayer;
     
-    // Method to restore shield health (can be called by healing items or abilities)
-    public void RestoreShieldHealth(float amount)
+    // Aura management methods
+    public Dictionary<UpgradeData.UpgradeType, AuraEffect> GetAllAuras()
     {
-        currentShieldHealth = Mathf.Min(currentShieldHealth + amount, maxShieldHealth);
+        return new Dictionary<UpgradeData.UpgradeType, AuraEffect>(activeAuras);
     }
+    
+    public List<UpgradeData.UpgradeType> GetActiveAuraTypes()
+    {
+        return new List<UpgradeData.UpgradeType>(activeAuras.Keys);
+    }
+    
+    public AuraEffect GetAura(UpgradeData.UpgradeType auraType)
+    {
+        if (activeAuras.ContainsKey(auraType))
+        {
+            return activeAuras[auraType];
+        }
+        return null;
+    }
+    
+    public void SetAuraOrbitingPrefab(UpgradeData.UpgradeType auraType, GameObject prefab)
+    {
+        if (activeAuras.ContainsKey(auraType))
+        {
+            AuraEffect aura = activeAuras[auraType];
+            if (aura != null)
+            {
+                aura.SetOrbitingPrefab(prefab);
+                Debug.Log($"Set orbiting prefab for {auraType} aura");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Cannot set prefab for {auraType} - aura not found");
+        }
+    }
+    
+    public void SetAllAurasOrbitingPrefab(GameObject prefab)
+    {
+        foreach (var aura in activeAuras.Values)
+        {
+            if (aura != null)
+            {
+                aura.SetOrbitingPrefab(prefab);
+            }
+        }
+        Debug.Log($"Set orbiting prefab for all {activeAuras.Count} auras");
+    }
+    
+    public void SetAuraOrbitSpeed(UpgradeData.UpgradeType auraType, float speed)
+    {
+        if (activeAuras.ContainsKey(auraType))
+        {
+            AuraEffect aura = activeAuras[auraType];
+            if (aura != null)
+            {
+                aura.SetOrbitSpeed(speed);
+                Debug.Log($"Set orbit speed for {auraType} aura to {speed}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Cannot set orbit speed for {auraType} - aura not found");
+        }
+    }
+    
+    public void SetAllAurasOrbitSpeed(float speed)
+    {
+        foreach (var aura in activeAuras.Values)
+        {
+            if (aura != null)
+            {
+                aura.SetOrbitSpeed(speed);
+            }
+        }
+        Debug.Log($"Set orbit speed for all {activeAuras.Count} auras to {speed}");
+    }
+    
+    // Try to apply coin prefab from AuraManagerUI
+    private void TryApplyCoinPrefabFromManager(AuraEffect auraEffect)
+    {
+        // Find AuraManagerUI in the scene
+        AuraManagerUI auraManager = FindObjectOfType<AuraManagerUI>();
+        if (auraManager != null)
+        {
+            GameObject coinPrefab = auraManager.GetCoinPrefab();
+            if (coinPrefab != null)
+            {
+                auraEffect.SetOrbitingPrefab(coinPrefab);
+                Debug.Log($"Applied coin prefab from AuraManagerUI: {coinPrefab.name}");
+            }
+            else
+            {
+                Debug.Log("AuraManagerUI found but no coin prefab assigned");
+            }
+            
+            // Apply visual settings if enabled
+            if (auraManager.GetApplyVisualSettingsToAll())
+            {
+                StartCoroutine(DelayedApplyVisualSettings(auraEffect, auraManager));
+            }
+        }
+        else
+        {
+            Debug.Log("No AuraManagerUI found in scene");
+        }
+    }
+    
+    private System.Collections.IEnumerator DelayedApplyVisualSettings(AuraEffect auraEffect, AuraManagerUI auraManager)
+    {
+        // Wait a bit for orbiting objects to be created
+        yield return new WaitForSeconds(0.1f);
+        
+        // Apply visual settings to the new aura
+        auraManager.ApplyVisualSettingsToAura(auraEffect);
+    }
+    
+    // Debug method to list all active auras
+    [ContextMenu("List All Active Auras")]
+    public void ListAllActiveAuras()
+    {
+        Debug.Log($"=== Active Auras ({activeAuras.Count}) ===");
+        foreach (var kvp in activeAuras)
+        {
+            UpgradeData.UpgradeType auraType = kvp.Key;
+            AuraEffect aura = kvp.Value;
+            
+            if (aura != null)
+            {
+                Debug.Log($"- {auraType}: Radius = {aura.GetRadius()}, Enabled = {aura.IsAuraEnabled()}");
+            }
+            else
+            {
+                Debug.Log($"- {auraType}: NULL (should be cleaned up)");
+            }
+        }
+        Debug.Log("=== End Aura List ===");
+    }
+    
+
 }

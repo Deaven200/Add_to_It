@@ -5,9 +5,6 @@ public class AuraTestHelper : MonoBehaviour
     [Header("Test Controls")]
     [SerializeField] private KeyCode testCoinMagnetKey = KeyCode.Alpha1;
     [SerializeField] private KeyCode testSlowAuraKey = KeyCode.Alpha2;
-    [SerializeField] private KeyCode testShieldAuraKey = KeyCode.Alpha3;
-    [SerializeField] private KeyCode testDamageAuraKey = KeyCode.Alpha4;
-    [SerializeField] private KeyCode testHealAuraKey = KeyCode.Alpha5;
     [SerializeField] private KeyCode testAllAurasKey = KeyCode.Alpha0;
     [SerializeField] private KeyCode removeAllAurasKey = KeyCode.R;
     
@@ -50,21 +47,6 @@ public class AuraTestHelper : MonoBehaviour
             TestSlowAura();
         }
         
-        if (Input.GetKeyDown(testShieldAuraKey))
-        {
-            TestShieldAura();
-        }
-        
-        if (Input.GetKeyDown(testDamageAuraKey))
-        {
-            TestDamageAura();
-        }
-        
-        if (Input.GetKeyDown(testHealAuraKey))
-        {
-            TestHealAura();
-        }
-        
         if (Input.GetKeyDown(testAllAurasKey))
         {
             TestAllAuras();
@@ -86,24 +68,6 @@ public class AuraTestHelper : MonoBehaviour
     {
         auraSystem.AddAura(UpgradeData.UpgradeType.SlowAura, testAuraValue, testRarity);
         Debug.Log($"Added Slow Aura with value {testAuraValue} and rarity {testRarity}");
-    }
-    
-    void TestShieldAura()
-    {
-        auraSystem.AddAura(UpgradeData.UpgradeType.ShieldAura, testAuraValue, testRarity);
-        Debug.Log($"Added Shield Aura with value {testAuraValue} and rarity {testRarity}");
-    }
-    
-    void TestDamageAura()
-    {
-        auraSystem.AddAura(UpgradeData.UpgradeType.DamageAura, testAuraValue, testRarity);
-        Debug.Log($"Added Damage Aura with value {testAuraValue} and rarity {testRarity}");
-    }
-    
-    void TestHealAura()
-    {
-        auraSystem.AddAura(UpgradeData.UpgradeType.HealAura, testAuraValue, testRarity);
-        Debug.Log($"Added Heal Aura with value {testAuraValue} and rarity {testRarity}");
     }
     
     void TestAllAuras()
@@ -137,33 +101,6 @@ public class AuraTestHelper : MonoBehaviour
         }
     }
     
-    [ContextMenu("Test Shield Aura")]
-    public void TestShieldAuraEditor()
-    {
-        if (Application.isPlaying && auraSystem != null)
-        {
-            TestShieldAura();
-        }
-    }
-    
-    [ContextMenu("Test Damage Aura")]
-    public void TestDamageAuraEditor()
-    {
-        if (Application.isPlaying && auraSystem != null)
-        {
-            TestDamageAura();
-        }
-    }
-    
-    [ContextMenu("Test Heal Aura")]
-    public void TestHealAuraEditor()
-    {
-        if (Application.isPlaying && auraSystem != null)
-        {
-            TestHealAura();
-        }
-    }
-    
     [ContextMenu("Test All Auras")]
     public void TestAllAurasEditor()
     {
@@ -191,9 +128,6 @@ public class AuraTestHelper : MonoBehaviour
         GUILayout.Label("Aura System Test Controls:");
         GUILayout.Label($"1: Coin Magnet Aura");
         GUILayout.Label($"2: Slow Aura");
-        GUILayout.Label($"3: Shield Aura");
-        GUILayout.Label($"4: Damage Aura");
-        GUILayout.Label($"5: Heal Aura");
         GUILayout.Label($"0: All Auras");
         GUILayout.Label($"R: Remove All");
         GUILayout.Label($"Active Auras: {auraSystem?.GetActiveAuraCount() ?? 0}");

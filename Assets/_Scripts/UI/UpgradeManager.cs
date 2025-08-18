@@ -358,44 +358,7 @@ public class UpgradeManager : MonoBehaviour
                 }
                 break;
                 
-            case UpgradeData.UpgradeType.ShieldAura:
-                // Apply shield aura
-                AuraSystem shieldAuraSystem = player.GetComponent<AuraSystem>();
-                if (shieldAuraSystem != null)
-                {
-                    shieldAuraSystem.AddAura(upgrade.upgradeType, upgrade.value, upgrade.rarity);
-                }
-                else
-                {
-                    Debug.LogError("AuraSystem component not found! Cannot apply aura upgrade.");
-                }
-                break;
-                
-            case UpgradeData.UpgradeType.DamageAura:
-                // Apply damage aura
-                AuraSystem damageAuraSystem = player.GetComponent<AuraSystem>();
-                if (damageAuraSystem != null)
-                {
-                    damageAuraSystem.AddAura(upgrade.upgradeType, upgrade.value, upgrade.rarity);
-                }
-                else
-                {
-                    Debug.LogError("AuraSystem component not found! Cannot apply aura upgrade.");
-                }
-                break;
-                
-            case UpgradeData.UpgradeType.HealAura:
-                // Apply heal aura
-                AuraSystem healAuraSystem = player.GetComponent<AuraSystem>();
-                if (healAuraSystem != null)
-                {
-                    healAuraSystem.AddAura(upgrade.upgradeType, upgrade.value, upgrade.rarity);
-                }
-                else
-                {
-                    Debug.LogError("AuraSystem component not found! Cannot apply aura upgrade.");
-                }
-                break;
+
                 
             default:
                 Debug.Log($"Upgrade type {upgrade.upgradeType} not implemented yet.");

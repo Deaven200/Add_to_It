@@ -79,9 +79,7 @@ public class RandomUpgradeGenerator : MonoBehaviour
                 // Aura System Upgrades
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.CoinMagnetAura, baseName = "Coin Magnet Aura", descriptionTemplate = "Creates a coin magnet aura with {0} radius", minValue = 2f, maxValue = 8f },
                 new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.SlowAura, baseName = "Slow Aura", descriptionTemplate = "Creates a slow aura with {0} radius", minValue = 2f, maxValue = 8f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.ShieldAura, baseName = "Shield Aura", descriptionTemplate = "Creates a protective shield aura with {0} radius", minValue = 2f, maxValue = 8f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.DamageAura, baseName = "Damage Aura", descriptionTemplate = "Creates a damage aura with {0} radius", minValue = 2f, maxValue = 8f },
-                new UpgradeTypeConfig { upgradeType = UpgradeData.UpgradeType.HealAura, baseName = "Heal Aura", descriptionTemplate = "Creates a healing aura with {0} radius", minValue = 2f, maxValue = 8f }
+
             };
         }
     }
@@ -122,10 +120,7 @@ public class RandomUpgradeGenerator : MonoBehaviour
             UpgradeData.UpgradeType.MoreOptions,
             // Aura System Types
             UpgradeData.UpgradeType.CoinMagnetAura,
-            UpgradeData.UpgradeType.SlowAura,
-            UpgradeData.UpgradeType.ShieldAura,
-            UpgradeData.UpgradeType.DamageAura,
-            UpgradeData.UpgradeType.HealAura
+            UpgradeData.UpgradeType.SlowAura
         };
 
         // Shuffle the available types

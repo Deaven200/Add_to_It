@@ -8,6 +8,10 @@ public class PlayerHealth : MonoBehaviour
     public int maxHealth = 100;
     public int currentHealth;
     
+    [Header("Invulnerability")]
+    [SerializeField] private bool isInvulnerable = false;
+    [SerializeField] private float invulnerabilityFlashDuration = 0.1f;
+    
     // Event that gets called when health changes
     public event Action<int, int> OnHealthChanged;
 
@@ -64,10 +68,14 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        // Don't take damage if invulnerable
+        if (isInvulnerable)
+        {
+            return;
+        }
+        
         currentHealth -= amount;
         currentHealth = Mathf.Max(0, currentHealth); // Ensure health doesn't go below 0
-        
-        // Notify UI of health change
         
         // Notify UI of health change
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -82,6 +90,45 @@ public class PlayerHealth : MonoBehaviour
         {
             Die();
         }
+    }
+    
+    // Invulnerability methods
+    public bool IsInvulnerable()
+    {
+        return isInvulnerable;
+    }
+    
+    public void SetInvulnerable(bool invulnerable)
+    {
+        isInvulnerable = invulnerable;
+        
+        // Optional: Add visual feedback for invulnerability
+        if (invulnerable)
+        {
+            StartCoroutine(InvulnerabilityFlash());
+        }
+    }
+    
+    private System.Collections.IEnumerator InvulnerabilityFlash()
+    {
+        Renderer renderer = GetComponent<Renderer>();
+        if (renderer == null) yield break;
+        
+        Material originalMaterial = renderer.material;
+        Color originalColor = originalMaterial.color;
+        
+        while (isInvulnerable)
+        {
+            // Flash between original color and a bright color
+            originalMaterial.color = Color.white;
+            yield return new WaitForSeconds(invulnerabilityFlashDuration);
+            
+            originalMaterial.color = originalColor;
+            yield return new WaitForSeconds(invulnerabilityFlashDuration);
+        }
+        
+        // Restore original color when invulnerability ends
+        originalMaterial.color = originalColor;
     }
     
     public void Heal(int amount)

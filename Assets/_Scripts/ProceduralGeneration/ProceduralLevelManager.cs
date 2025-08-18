@@ -22,6 +22,10 @@ public class ProceduralLevelManager : MonoBehaviour
     [SerializeField] private int chunksPerFrame = 1; // Reduced from 2
     [SerializeField] private float maxGenerationTime = 0.016f; // Max 16ms per frame
     
+    [Header("FPS Optimization")]
+    [SerializeField] private bool enableFPSOptimization = true;
+    [SerializeField] private FPSOptimizer fpsOptimizer;
+    
     [Header("Terrain Settings")]
     [SerializeField] private TerrainSettings terrainSettings;
     
@@ -52,6 +56,7 @@ public class ProceduralLevelManager : MonoBehaviour
     private int totalChunksGenerated;
     private bool isGenerating = false;
     private bool isInitialized = false;
+    private bool isGenerationPaused = false;
     
     // Chunk management
     private Dictionary<Vector2Int, Chunk> activeChunks = new Dictionary<Vector2Int, Chunk>();
@@ -72,6 +77,7 @@ public class ProceduralLevelManager : MonoBehaviour
     public bool EnablePersistence => enablePersistence;
     public int ActiveChunkCount => activeChunks.Count;
     public int PooledChunkCount => chunkPool.Count;
+    public bool IsGenerationPaused => isGenerationPaused;
     
     void Start()
     {
@@ -113,6 +119,9 @@ public class ProceduralLevelManager : MonoBehaviour
             
             // Set up navigation system
             SetupNavigationSystem();
+            
+            // Set up FPS optimization
+            SetupFPSOptimization();
             
             // Initialize chunk pool
             InitializeChunkPool();
@@ -199,6 +208,41 @@ public class ProceduralLevelManager : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"Error setting up navigation system: {e.Message}");
+        }
+    }
+    
+    void SetupFPSOptimization()
+    {
+        if (!enableFPSOptimization) return;
+        
+        try
+        {
+            // Find or create FPS optimizer
+            if (fpsOptimizer == null)
+            {
+                fpsOptimizer = FindObjectOfType<FPSOptimizer>();
+                if (fpsOptimizer == null)
+                {
+                    GameObject optimizerGO = new GameObject("FPSOptimizer");
+                    fpsOptimizer = optimizerGO.AddComponent<FPSOptimizer>();
+                }
+            }
+            
+            // Subscribe to FPS optimizer events
+            if (fpsOptimizer != null)
+            {
+                fpsOptimizer.OnGenerationPausedChanged += OnGenerationPausedChanged;
+                fpsOptimizer.OnEmergencyModeChanged += OnEmergencyModeChanged;
+            }
+            
+            if (showDebugInfo)
+            {
+                Debug.Log("FPS optimization system initialized");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error setting up FPS optimization: {e.Message}");
         }
     }
     
@@ -305,6 +349,12 @@ public class ProceduralLevelManager : MonoBehaviour
     {
         if (chunksToGenerate.Count == 0) return;
         
+        // Check if generation is paused due to FPS optimization
+        if (isGenerationPaused)
+        {
+            return;
+        }
+        
         isGenerating = true;
         float startTime = Time.realtimeSinceStartup;
         int chunksProcessed = 0;
@@ -313,7 +363,8 @@ public class ProceduralLevelManager : MonoBehaviour
         {
             while (chunksToGenerate.Count > 0 && 
                    chunksProcessed < chunksPerFrame && 
-                   (Time.realtimeSinceStartup - startTime) < maxGenerationTime)
+                   (Time.realtimeSinceStartup - startTime) < maxGenerationTime &&
+                   !isGenerationPaused) // Check again in case it was paused during processing
             {
                 // Get the first chunk position from the set
                 Vector2Int chunkPos = new Vector2Int();
@@ -673,6 +724,68 @@ public class ProceduralLevelManager : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Event handler for FPS optimization generation pause
+    /// </summary>
+    private void OnGenerationPausedChanged(bool paused)
+    {
+        isGenerationPaused = paused;
+        
+        if (showDebugInfo)
+        {
+            Debug.Log($"Chunk generation {(paused ? "paused" : "resumed")} due to FPS optimization");
+        }
+    }
+    
+    /// <summary>
+    /// Event handler for FPS optimization emergency mode
+    /// </summary>
+    private void OnEmergencyModeChanged(bool emergencyMode)
+    {
+        if (showDebugInfo)
+        {
+            Debug.Log($"Emergency mode {(emergencyMode ? "activated" : "deactivated")} due to FPS optimization");
+        }
+    }
+    
+    /// <summary>
+    /// Set the render distance (used by FPS optimizer)
+    /// </summary>
+    public void SetRenderDistance(int newDistance)
+    {
+        if (newDistance != renderDistance)
+        {
+            renderDistance = newDistance;
+            
+            if (showDebugInfo)
+            {
+                Debug.Log($"Render distance changed to {renderDistance}");
+            }
+            
+            // Regenerate chunks with new render distance
+            if (player != null)
+            {
+                GenerateChunksAroundPlayer();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Pause chunk generation (used by FPS optimizer)
+    /// </summary>
+    public void PauseGeneration()
+    {
+        isGenerationPaused = true;
+    }
+    
+    /// <summary>
+    /// Resume chunk generation (used by FPS optimizer)
+    /// </summary>
+    public void ResumeGeneration()
+    {
+        isGenerationPaused = false;
+    }
+    
     System.Collections.IEnumerator WaitForInitialGeneration()
     {
         if (showVerboseLogs)
@@ -804,6 +917,16 @@ public class ProceduralLevelManager : MonoBehaviour
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(player.position, 0.5f);
+        }
+    }
+    
+    void OnDestroy()
+    {
+        // Unsubscribe from FPS optimizer events
+        if (fpsOptimizer != null)
+        {
+            fpsOptimizer.OnGenerationPausedChanged -= OnGenerationPausedChanged;
+            fpsOptimizer.OnEmergencyModeChanged -= OnEmergencyModeChanged;
         }
     }
     
